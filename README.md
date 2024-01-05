@@ -139,12 +139,6 @@ gapcast.exe -i <interface>
 
 <p align="center">Obviously there are many other techniques, happy hacking!</p>
 
-<h1 align="center">What is "Shifting of inactive devices"?</h1>
-
-<p>"Shifting of inactive devices" is the <strong>movement of devices to an inactive section not visible in the terminal</strong>.</p> 
-
-<p>This movement is enabled when a device is inactive for <strong>30 seconds</strong>, if the device shows up after 30 seconds it becomes "active" and restores all data. If you want to deactivate the process of moving devices to the inactive section, add the <code>-d</code> parameter.</p>
-
 <h1 align="center">Monitor mode handler</h1>
 
 <p>For each driver there is a correct <strong>sequence of commands to start the network card correctly in monitor mode</strong>. <strong>Drivers supported by gapcast can also have a txpower modification, bug fixing etc</strong>, as in the case of the RTL8812AU chipset which can be increased to a txpower of 30 dBm. If the driver is not supported, it will start monitor mode directly with airmon-ng.</p>
