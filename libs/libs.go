@@ -166,7 +166,7 @@ func PrintLogo(color Colors) {
     fmt.Println(color.Green + "     ^@@@@J             " + color.Blue + "| Initializing...")
     fmt.Println(color.Green + "     5@@@B              " + color.Blue + "| ")
     fmt.Println(color.Green + "    .&@@@J              " + color.Blue + "| Gapcast for fun!")
-    fmt.Println(color.Green + "    !@@@@~   .....      " + color.Blue + "| Version 0.0.7")
+    fmt.Println(color.Green + "    !@@@@~   .....      " + color.Blue + "| Version 1.0.0")
     fmt.Println(color.Green + "    Y@@@&.  .B&&&7      " + color.Blue + "| ")
     fmt.Println(color.Green + "    G@@@B   ~@@@@^      " + color.Blue + "| https://github.com/ANDRVV/gapcast")
     fmt.Println(color.Green + "   .#@@@5   ?@@@#.      " + color.Blue + "| ")
