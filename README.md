@@ -8,18 +8,10 @@
 <p align="center"><strong>Gapcast</strong> is an IEEE 802.11 packet injection and analyzer software 📡</p>
 <p align="center">Use it with <a href="https://github.com/ANDRVV/gapcast/wiki#-radar">RadarRSSI</a>!</p>
 
-<h2 align="center">Badges</h2>
-
 <div align="center" style="display:grid;place-items:center;">
 
-[![Go](https://github.com/ANDRVV/gapcast/actions/workflows/go.yml/badge.svg)](https://github.com/ANDRVV/gapcast/actions/workflows/go.yml)
-
-[![CodeQL](https://github.com/ANDRVV/gapcast/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/ANDRVV/gapcast/actions/workflows/github-code-scanning/codeql)
-
-[![Codacy Security Scan](https://github.com/ANDRVV/gapcast/actions/workflows/codacy.yml/badge.svg)](https://github.com/ANDRVV/gapcast/actions/workflows/codacy.yml)
-
+[![Go](https://github.com/ANDRVV/gapcast/actions/workflows/go.yml/badge.svg)](https://github.com/ANDRVV/gapcast/actions/workflows/go.yml) [![CodeQL](https://github.com/ANDRVV/gapcast/actions/workflows/codeql.yml/badge.svg)](https://github.com/ANDRVV/gapcast/actions/workflows/codeql.yml) [![Codacy Security Scan](https://github.com/ANDRVV/gapcast/actions/workflows/codacy.yml/badge.svg)](https://github.com/ANDRVV/gapcast/actions/workflows/codacy.yml)
 </div>
-
 <h1 align="center">How to run Gapcast</h1>
 <p><strong>Requirements</strong></p>
 <p><code><a href="https://github.com/golang/go">Go</a> 1.21.1+</code></p>
@@ -27,7 +19,7 @@
 <p><code><a href="https://github.com/nmap/npcap">Npcap</a> (Wlanhelper) only for <strong>Windows 8.1+</strong></code></p>
 </div>
 
-<p align="center">For <strong>GNU/Linux</strong> (Highly recommended)</p>
+<p align="center">For <strong>GNU/Linux</strong></p>
 
 ```bash
 git clone https://github.com/ANDRVV/gapcast.git
@@ -139,15 +131,9 @@ gapcast.exe -i <interface>
 
 <p align="center">Obviously there are many other techniques, happy hacking!</p>
 
-<h1 align="center">What is "Shifting of inactive devices"?</h1>
-
-<p>"Shifting of inactive devices" is the <strong>movement of devices to an inactive section not visible in the terminal</strong>.</p> 
-
-<p>This movement is enabled when a device is inactive for <strong>30 seconds</strong>, if the device shows up after 30 seconds it becomes "active" and restores all data. If you want to deactivate the process of moving devices to the inactive section, add the <code>-d</code> parameter.</p>
-
 <h1 align="center">Monitor mode handler</h1>
 
-<p>For each driver there is a correct <strong>sequence of commands to start the network card correctly in monitor mode</strong>. <strong>Drivers supported by gapcast can also have a txpower modification, bug fixing etc</strong>, as in the case of the RTL8812AU chipset which can be increased to a txpower of 30 dBm. If the driver is not supported, it will start monitor mode directly with airmon-ng.</p>
+<p>For each driver there is a correct <strong>sequence of commands to start the network card correctly in monitor mode</strong>. <strong>Drivers supported by gapcast can also have a txpower modification, bug fixing etc</strong>, as in the case of the RTL8812AU chipset which can be increased to a txpower of 30 dBm. If the driver is not supported, it will start monitor mode directly with Airmon-ng.</p>
 <p>Supported drivers:</p>
 <ul>
     <li><code>RTL88XXAU</code> mon+txpower</li>
