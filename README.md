@@ -150,6 +150,6 @@ gapcast.exe -i <interface>
 
 <h1 align="center">Future features</h1>
 <ul>
-<li>Advanced diagnostic of ack, probe req and deep scan of single target (v0.0.8)</li>
+<li>Advanced diagnostic of ack, probe req and deep scan of single target (v1.0.1)</li>
 <li>Evil Twin attack (v?)</li>
 </ul>
