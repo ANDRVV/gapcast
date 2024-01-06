@@ -202,7 +202,7 @@ func SecondsToHMS(seconds int) string {
 	var result string
 	if hours > 0 {
 		result += strconv.Itoa(hours) + "h"
-        if minutes > 0 {
+        if minutes > 0 || seconds > 0 {
             result += " "
         }
 	}
