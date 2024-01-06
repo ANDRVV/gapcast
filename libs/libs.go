@@ -14,7 +14,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
 	colo "github.com/fatih/color"
 	"github.com/mattn/go-isatty"
 	"golang.org/x/exp/slices"
