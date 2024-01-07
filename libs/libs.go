@@ -223,10 +223,10 @@ func RadioLocalize(ReceivedDBM int, Channel int, radarconf jsonreader.RadarConf)
 	var TXData libs.TransmitterData
 	if reflect.DeepEqual(radarconf, jsonreader.RadarConf{}) {
 		RxFData = RadarRSSI.GetCustomRFData(float64(ReceivedDBM), Channel, 5)
-		TXData = RadarRSSI.GetCustomTransmitterData(radarconf.TXAntennaDBI, radarconf.TXPowerDBM)
+		TXData = RadarRSSI.GetCustomTransmitterData(2, 20.5)
 	} else {
 		RxFData = RadarRSSI.GetCustomRFData(float64(ReceivedDBM), Channel, radarconf.RXAntennaDBI)
-		TXData = RadarRSSI.GetCustomTransmitterData(3, 20.5)
+		TXData = RadarRSSI.GetCustomTransmitterData(radarconf.TXAntennaDBI, radarconf.TXPowerDBM)
 	}
 	return "~" + fmt.Sprintf("%.1f", RadarRSSI.Radiolocate(RxFData, TXData, RadarRSSI.GetAutoDBPathLoss(RxFData))) + "m"
 }
