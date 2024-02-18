@@ -58,6 +58,18 @@ type DeviceClient struct {
     LastUpdate   time.Time
 }
 
+type InfoSingleDevice struct {
+    Essid        string 
+    Manufacturer string
+    ReceivedPKT  int
+    SendedPKT    int
+    SndRcvACK    int
+    Channel      int
+    PowerLOW     string
+    PowerMID     string
+    PowerHIGH    string
+}
+
 type Alldata struct {
     ClientData map[string]DeviceClient
     DeviceData map[string]Device
