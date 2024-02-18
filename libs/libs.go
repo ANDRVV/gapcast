@@ -23,7 +23,11 @@ var (
 	G24channels            [14]int = [14]int{1, 7, 13, 2, 8, 3, 14, 9, 4, 10, 5, 11, 6, 12}
 	G5channels             [47]int = [47]int{36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 100, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 132, 134, 136, 138, 140, 142, 144, 149, 151, 153, 155, 157, 159, 161, 165, 169, 173}	
 	G5g24Channels          [61]int = [61]int{1, 7, 13, 2, 8, 3, 14, 9, 4, 10, 5, 11, 6, 12, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 60, 62, 64, 100, 102, 104, 106, 108, 110, 112, 114, 116, 118, 120, 122, 124, 126, 128, 132, 134, 136, 138, 140, 142, 144, 149, 151, 153, 155, 157, 159, 161, 165, 169, 173}
-)  
+)
+
+const (
+	VERSION string = "1.0.1"
+)
 
 func ScreenClear() {
 	var cmd *exec.Cmd
@@ -156,16 +160,16 @@ func SetupColors() Colors {
 	return color
 }
 
-func PrintLogo(color Colors) {
+func PrintLogo(color Colors, msg string) {
 	ScreenClear()
 	fmt.Println()
     fmt.Println(color.Green + "         :~7JJJJJ~      ")
     fmt.Println(color.Green + "       !G&@@@@@@@Y      ")
     fmt.Println(color.Green + "      ?@@@@B5JY55^      " + color.Blue + "| ")
-    fmt.Println(color.Green + "     ^@@@@J             " + color.Blue + "| Initializing...")
+    fmt.Println(color.Green + "     ^@@@@J             " + color.Blue + "| " + msg)
     fmt.Println(color.Green + "     5@@@B              " + color.Blue + "| ")
     fmt.Println(color.Green + "    .&@@@J              " + color.Blue + "| Gapcast for fun!")
-    fmt.Println(color.Green + "    !@@@@~   .....      " + color.Blue + "| Version 1.0.0")
+    fmt.Println(color.Green + "    !@@@@~   .....      " + color.Blue + "| Version " + VERSION)
     fmt.Println(color.Green + "    Y@@@&.  .B&&&7      " + color.Blue + "| ")
     fmt.Println(color.Green + "    G@@@B   ~@@@@^      " + color.Blue + "| https://github.com/ANDRVV/gapcast")
     fmt.Println(color.Green + "   .#@@@5   ?@@@#.      " + color.Blue + "| ")
