@@ -4,8 +4,9 @@ import (
 	"flag"
 	"fmt"
 	"gapcast/libs"
-	"gapcast/libs/jsonreader"
 	"gapcast/libs/injpacket"
+	"gapcast/libs/jsonreader"
+	"math"
 	"os"
 	"runtime"
 	"slices"
@@ -13,6 +14,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"text/tabwriter"
 	"time"
 	bettercap "github.com/bettercap/bettercap/packets"
 	"github.com/eiannone/keyboard"
@@ -24,7 +26,6 @@ import (
 	"github.com/rodaine/table"
 	"golang.design/x/hotkey"
 	"golang.org/x/exp/maps"
-	"text/tabwriter"
 )
 
 var (
@@ -34,15 +35,18 @@ var (
 	panicExit            bool                         = false
 	singleChannel        bool                         = false
 	paused               bool                         = false
+	stopScan             bool                         = false
 	writing              bool                         = false
 	rssiradar            bool                         = false
 	openTable            bool                         = false
 	injection            bool                         = false
 	injblock             bool                         = false
 	alreadyDKeyReg       bool                         = false
+	sngtrgLoading        bool                         = false
 	mt                   chan bool                    = make(chan bool)
 	mtLoading            chan bool                    = make(chan bool)
 	exitChannel          chan bool                    = make(chan bool)
+	chanstage            chan bool                    = make(chan bool)
 	inactiveClient       map[string]libs.DeviceClient = make(map[string]libs.DeviceClient)
 	inactiveDevice       map[string]libs.Device       = make(map[string]libs.Device)
 	mutex                sync.RWMutex                 = sync.RWMutex{}
@@ -70,7 +74,7 @@ var (
 	radarconf            jsonreader.RadarConf
 )
 
-func collect() ([]int, string, string, string, bool, string, bool, bool) {
+func collect() ([]int, string, string, string, bool, string, bool, bool, string) {
 	var ch *string = flag.String("c", "-1", "")
 	var load *string = flag.String("l", "?", "")
 	var bssid *string = flag.String("b", "?", "")
@@ -83,6 +87,7 @@ func collect() ([]int, string, string, string, bool, string, bool, bool) {
 	var beacon *bool = flag.Bool("beacon", false, "")
 	var iface *string = flag.String("i", "?", "")
 	var showi *bool = flag.Bool("show-i", false, "")
+	var sc *string = flag.String("sc", "?", "")
 
 	flag.Usage = func() {
 		fmt.Println("Usage of gapcast:")
@@ -117,6 +122,10 @@ func collect() ([]int, string, string, string, bool, string, bool, bool) {
 		fmt.Println("        Write to pcap file.")
 		fmt.Println("    -l <file>.pcap")
 		fmt.Println("        Load pcap file.")
+		fmt.Println()
+		fmt.Println("Features:")
+		fmt.Println("    -sc <BSSID> : string")
+		fmt.Println("        Scan a single target carefully.")
 		os.Exit(1)
 	}
 
@@ -125,6 +134,13 @@ func collect() ([]int, string, string, string, bool, string, bool, bool) {
 	if *showi {
 		printInterfacesInfo()
 		os.Exit(0)
+	}
+
+	if *sc != "?" {
+		if !libs.IsValidMAC(*sc) {
+			fmt.Println("Mac address " + *sc + " is invalid (-sc).\n")
+			flag.Usage()
+		}
 	}
 
 	if *iface == "?" && *load == "?" {
@@ -138,6 +154,7 @@ func collect() ([]int, string, string, string, bool, string, bool, bool) {
 		fmt.Println()
 		flag.Usage()
 	}
+
 	var lencount int = 0
 	var loadScan bool = false
 	if *ch != "-1" {
@@ -176,6 +193,9 @@ func collect() ([]int, string, string, string, bool, string, bool, bool) {
 		lencount++
 	}
 	if *load != "?" {
+		lencount += 2
+	}
+	if *sc != "?" {
 		lencount += 2
 	}
 
@@ -221,7 +241,7 @@ func collect() ([]int, string, string, string, bool, string, bool, bool) {
 		} 
 	}
 
-	return ChannelList, *write, *iface, strings.ToLower(*prefix), *dinac, *load, loadScan, *beacon
+	return ChannelList, *write, *iface, strings.ToLower(*prefix), *dinac, *load, loadScan, *beacon, *sc
 }
 
 func printInterfacesInfo() {
@@ -257,8 +277,10 @@ func signalExit(nameiface string, oldmoment bool) {
 	defer os.Exit(0)
 	if oldmoment {
 		mt <- true
+	} 
+	if sngtrgLoading {
+		chanstage <- true
 	}
-	mtLoading = make(chan bool)
 	time.Sleep(200 * time.Millisecond)
 	fmt.Println()
 	go libs.Loading("[" + color.Blue + "EXIT" + color.White + "] Setting up managed mode", mtLoading)
@@ -307,7 +329,7 @@ func setup(file string, nameiface string, load bool, pcapfile string) string {
 		pcapWriter.WriteFileHeader(65536, layers.LinkTypeIEEE80211Radio)
 	}
 	color = libs.SetupColors()
-	libs.PrintLogo(color)
+	libs.PrintLogo(color, "Initializing...")
 	if !libs.AlreadyMon(nameiface) {
 		if !libs.MonSupportCheck() {
 			if runtime.GOOS == "windows" {
@@ -327,7 +349,7 @@ func setup(file string, nameiface string, load bool, pcapfile string) string {
 		mt <- true
 		mt = make(chan bool)
 	} else {
-		fmt.Println("[" + color.Green + "INIT" + color.White + "] Skip (Monitor mode already enabled).")
+		fmt.Println("[" + color.Green + "INIT" + color.White + "] Skip. (Monitor mode already enabled)")
 		time.Sleep(1200 * time.Millisecond)
 	}
 	if G5 && !libs.G5Check(nameiface) {
@@ -379,9 +401,7 @@ func ChannelChanger(ChannelList []int, nameiface string) {
 	var changeCh func([]int, string) = func(ChannelList []int, nameiface string) {
 		if singleChannel {
 			libs.ChangeChannel(nameiface, ChannelList[0])
-			mutex.Lock()
 			globalChannel = ChannelList[0]
-			mutex.Unlock()
 			time.Sleep(100 * time.Millisecond)
 		} else {
 			for {
@@ -415,10 +435,11 @@ func update() {
 		elapsedTime = time.Now()
 	}
 	var maxRefresh int64
-	if runtime.GOOS == "windows" {
-		maxRefresh = 450
-	} else {
-		maxRefresh = 20
+	switch runtime.GOOS {
+		case "windows":
+			maxRefresh = 450
+		default:
+		 	maxRefresh = 20
 	}
 	for {
 		time.Sleep(10 * time.Millisecond)
@@ -1022,7 +1043,7 @@ func handlePacket(handle *pcap.Handle, chans []int, prefix string, filter bool, 
 	if offload {defer func(){elapsedTime = time.Now().Add(-lastMP.Sub(firstMP))}()}
 	
 	for pkt := range packets.Packets() {
-		if paused || panicExit {return}
+		if paused || panicExit || stopScan {return}
 		if offload {
 			lastMP = pkt.Metadata().Timestamp
 			if firstMP.IsZero() {
@@ -1209,7 +1230,7 @@ func setupChart() {
 func loaderSetupView(file string) {
 	libs.ScreenClear()
 	color = libs.SetupColors()
-	libs.PrintLogo(color)
+	libs.PrintLogo(color, "Initializing...")
 	go libs.Loading("[" + color.Green + "INIT" + color.White + "] Loading pcap file", mt)
 	time.Sleep(1200 * time.Millisecond)
 	handle, err := pcap.OpenOffline(file)
@@ -1217,7 +1238,7 @@ func loaderSetupView(file string) {
 	if err != nil {
 		mt <- true
 		fmt.Println()
-		libs.SignalError(color, "Error to reading selected file (Have data?).")
+		libs.SignalError(color, "Error to reading selected file. (Data is present?)")
 	}
 	defer handle.Close()
 	var warning bool
@@ -1238,9 +1259,147 @@ func loaderSetupView(file string) {
 	time.Sleep(1 * time.Second)
 }
 
+func deepScanning(ChannelList []int, nameiface string, iface string, bssid string) {
+	var stage int = 1
+	var deviceDBM int
+	var info libs.InfoSingleDevice
+	var isClient bool
+	var srcmac string
+	var dbmreg []int
+	var stagemsg []string = []string{"Detecting target", 
+									 "Analysis target", 
+									 "Finalization of target's data"}
+	sngtrgLoading = true
+	time.Sleep(1 * time.Second)
+	for stage < 4 {
+		if stage == 1 {
+			libs.ScreenClear()
+			libs.PrintLogo(color, "Running scan mode...")
+			fmt.Println(color.White + "[" + color.Blue + "MSG" + color.White + "] Gapcast's target scanner")
+			fmt.Println()
+			time.Sleep(2 * time.Second)
+		}
+		if stage != 4 {
+			go libs.Loading(color.White + "[" + color.Green + "SCAN" + color.White + "] Stage " + strconv.Itoa(stage) + " <" + color.Purple + stagemsg[stage - 1] + color.White + ">", chanstage)
+		}
+		time.Sleep(1 * time.Second)
+		switch stage {
+			case 1:
+				ChannelChanger(ChannelList, nameiface)
+				handle = libs.GetMonitorSniffer(nameiface, iface, color)
+				go handlePacket(handle, ChannelList, "?", false, false, false)
+				for {
+					time.Sleep(time.Second * 5)
+					mutex.Lock()
+					if info1, exist1 := analysisData.DeviceData[strings.ToUpper(bssid)]; exist1 {
+						isClient = false
+						info = libs.InfoSingleDevice{Essid: info1.Essid, Manufacturer: info1.Manufacturer, Channel: info1.Ch}
+						srcmac = strings.ToUpper(bssid)
+						break
+					} else if info2, exist2 := analysisData.ClientData[strings.ToUpper(bssid)]; exist2 {
+						isClient = true
+						info = libs.InfoSingleDevice{Essid: info2.Essid, Manufacturer: info2.Manufacturer, Channel: analysisData.DeviceData[info2.Bssid].Ch}
+						srcmac = strings.ToUpper(bssid)
+						break
+					}
+					mutex.Unlock()
+				}
+				stopScan = true
+				chanstage <- true
+			case 2:
+				var handle *pcap.Handle = libs.GetMonitorSniffer(nameiface, iface, color)
+				var packets *gopacket.PacketSource = gopacket.NewPacketSource(handle, handle.LinkType())
+				defer handle.Close()
+				singleChannel = true
+				ChannelChanger([]int{info.Channel}, nameiface)
+				var scantime time.Time = time.Now()
+				for packet := range packets.Packets() {
+					if packet.ErrorLayer() == nil && packet != nil && packet.Layer(layers.LayerTypeDot11) != nil {
+						if PWR, err := libs.GetDBM(packet); !err {
+							if TRS, RCV, err := libs.GetAPSTDATA(packet); err == nil {
+								if strings.EqualFold(RCV, srcmac) {									
+									info.ReceivedPKT++					
+								} else if strings.EqualFold(TRS, srcmac) {
+									dbmreg = append(dbmreg, int(PWR))
+									info.SendedPKT++
+								}
+								if dot11 := packet.Layer(layers.LayerTypeDot11).(*layers.Dot11); 
+								dot11.Type.MainType() == layers.Dot11TypeCtrl {
+									info.SndRcvACK++
+								}
+							}
+						}
+					}
+					if int64(time.Since(scantime).Seconds()) > 10 {
+						if info.SendedPKT > 0 {
+							break
+						} else {
+							scantime = time.Now()
+							continue
+						}
+					}
+				}
+				chanstage <- true
+			case 3:
+				sort.Ints(dbmreg)
+				var drlen = int(math.Round(float64(len(dbmreg) / 2)))
+				if len(dbmreg) % 2 == 0 {
+					deviceDBM = (dbmreg[drlen - 1] + dbmreg[drlen]) / 2
+				} else {
+					deviceDBM = dbmreg[drlen]
+				}
+				for _, dbmlevel := range []float64{2, 3, 5} {
+					radarconf.TXAntennaDBI = dbmlevel
+					switch dbmlevel {
+						case 2:
+							info.PowerLOW = libs.RadioLocalize(deviceDBM, info.Channel, radarconf)
+						case 3:
+							info.PowerMID = libs.RadioLocalize(deviceDBM, info.Channel, radarconf)
+						case 5:
+							info.PowerHIGH = libs.RadioLocalize(deviceDBM, info.Channel, radarconf)
+					}
+				}
+				chanstage <- true
+		}
+		time.Sleep(1 * time.Second)
+		stage++
+	}
+	sngtrgLoading = false
+	fmt.Println("\n" + color.White + "Analysis's response")
+	fmt.Println(color.White + ">  =========================\n")
+	fmt.Println(color.White + "     | [" + color.Blue + "ESSID" + color.White + "]       " + info.Essid)
+	var spcsForNames []int = []int{6, 4, 5, 1, 1, 8, 1, 3, 3, 3}
+	var infonames []string = []string{"BSSID", "CHANNEL", "VENDOR", "SENDED-PKT", "RECEVD-PKT", "ACK", "RECEVD-DBM", "ANT-2DBI", "ANT-3DBI", "ANT-5DBI"}
+	for idxname, infoelem := range []interface{}{srcmac, 
+		                                         info.Channel,
+												 info.Manufacturer, 
+												 info.SendedPKT,
+												 info.ReceivedPKT, 
+												 info.SndRcvACK,
+												 strconv.Itoa(deviceDBM) + " dBm", 
+												 info.PowerLOW, 
+												 info.PowerMID, 
+												 info.PowerHIGH} {
+		fmt.Printf("%s %v\n", color.White + "     | [" + color.Blue + infonames[idxname] + color.White + "]" + strings.Repeat(" ", spcsForNames[idxname]), infoelem)
+	}
+	var deviceType string
+	switch isClient {
+		case true:
+			deviceType = "STATION"
+		case false:
+			deviceType = "ACCESS-POINT"
+	}
+	fmt.Println(color.White + "     | [" + color.Blue + "DEVICE-TYPE" + color.White + "] " + deviceType)
+	fmt.Println("\n" + color.White + "   =========================")
+}
+
+
 func main() {
-	ChannelList, file, nameiface, prefix, disableInactiver, loaderFile, loadScan, onlyBeacon := collect()
-	if loaderFile == "?" {
+	ChannelList, file, nameiface, prefix, disableInactiver, loaderFile, loadScan, onlyBeacon, scbssid := collect()
+	if scbssid != "?" {
+		rssiradar = true
+		deepScanning(ChannelList, nameiface, setup("?", nameiface, false, ""), scbssid)
+	} else if loaderFile == "?" {
 		engine(nameiface, setup(file, nameiface, false, ""), ChannelList, prefix, disableInactiver, onlyBeacon)
 	} else if libs.ReaderCheck(loaderFile) {
 		if loadScan {
