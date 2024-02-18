@@ -51,6 +51,20 @@ gapcast.exe -i <interface>
 
 <p>Check out the <a href="https://github.com/ANDRVV/gapcast/wiki">wiki</a>!</p>
 
+<h3>Single deep scanning</h3>
+
+```bash
+./gapcast -i <iface> -sc 03:e9:58:65:2a:86 -2.4+5g
+```
+> **Note**
+> With the `-sc <mac>` parameter scans the target in depth, using this method however discards all the other parameters, except for `-i <iface>` and the band selection such as `-5g` or `-2.4+5g`.
+
+<div align="center" style="display:grid;place-items:center;"> 
+    <p>
+        <a href="https://github.com/ANDRVV/gapcast/wiki/Injection-Table"><img src="https://github.com/ANDRVV/gapcast/blob/main/images/sc.png?raw=true" alt="Single deep scanning output example"></a>
+    </p>
+</div>
+
 <h3>SCAN-ALL-FOR-LONG-TIME</h3>
 
 ```bash
@@ -150,6 +164,5 @@ gapcast.exe -i <interface>
 
 <h1 align="center">Future features</h1>
 <ul>
-<li>Advanced diagnostic of ack, probe req and deep scan of single target (v1.0.1)</li>
 <li>Evil Twin attack (v?)</li>
 </ul>
