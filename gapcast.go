@@ -349,7 +349,7 @@ func setup(file string, nameiface string, load bool, pcapfile string) string {
 		mt <- true
 		mt = make(chan bool)
 	} else {
-		fmt.Println("[" + color.Green + "INIT" + color.White + "] Skip. (Monitor mode already enabled)")
+		fmt.Println("[" + color.Green + "INIT" + color.White + "] Skipped (Monitor mode already enabled)")
 		time.Sleep(1200 * time.Millisecond)
 	}
 	if G5 && !libs.G5Check(nameiface) {
