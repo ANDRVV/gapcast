@@ -39,12 +39,21 @@ gapcast.exe -i <interface>
 
 <h1 align="center">Injection Table</h1>
 
-<p>The Injection table is a table where you can insert data and perform an injection even <i>without specifying the channel or BSSID</i>. For in-depth information <a href="https://github.com/ANDRVV/gapcast/wiki/Injection-Table">click here</a>.</p>
-<div align="center" style="display:grid;place-items:center;"> 
-    <p>
-        <a href="https://github.com/ANDRVV/gapcast/wiki/Injection-Table"><img src="https://github.com/ANDRVV/gapcast/blob/main/images/injtype-selection.png?raw=true" alt="Table Injection Example"></a>
-    </p>
-</div>
+<a align="right" href="https://github.com/ANDRVV/gapcast/wiki/Injection-Table"><img src="https://github.com/ANDRVV/gapcast/blob/main/images/injtype-selection.png?raw=true" alt="Table Injection Example" align="right" width="475"></a>
+<p align="left">The Injection table is a table where you can insert data and perform an injection even <i>without specifying the channel or BSSID</i>. For more info <a href="https://github.com/ANDRVV/gapcast/wiki/Injection-Table">click here</a>.</p>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
 
 <h1 align="center">Parameter techniques</h1>
 <h3>Usage</h3>
@@ -61,7 +70,7 @@ gapcast.exe -i <interface>
 
 <div align="center" style="display:grid;place-items:center;"> 
     <p>
-        <a href="https://github.com/ANDRVV/gapcast/wiki/Injection-Table"><img src="https://github.com/ANDRVV/gapcast/blob/main/images/sc.png?raw=true" alt="Single deep scanning output example"></a>
+        <a href="https://github.com/ANDRVV/gapcast/wiki/Single-deep-scanning"><img src="https://github.com/ANDRVV/gapcast/blob/main/images/sc.png?raw=true" alt="Single deep scanning output example"></a>
     </p>
 </div>
 
