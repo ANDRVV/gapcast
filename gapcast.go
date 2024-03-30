@@ -1295,11 +1295,13 @@ func deepScanning(ChannelList []int, nameiface string, iface string, bssid strin
 						isClient = false
 						info = libs.InfoSingleDevice{Essid: info1.Essid, Manufacturer: info1.Manufacturer, Channel: info1.Ch}
 						srcmac = strings.ToUpper(bssid)
+						mutex.Unlock()
 						break
 					} else if info2, exist2 := analysisData.ClientData[strings.ToUpper(bssid)]; exist2 {
 						isClient = true
 						info = libs.InfoSingleDevice{Essid: info2.Essid, Manufacturer: info2.Manufacturer, Channel: analysisData.DeviceData[info2.Bssid].Ch}
-						srcmac = strings.ToUpper(bssid)
+						srcmac = strings.ToUpper(info2.Bssid) // srcmac on this line is AP bssid
+						mutex.Unlock()
 						break
 					}
 					mutex.Unlock()
