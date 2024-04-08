@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"os/user"
 	"regexp"
 	"runtime"
 	"strconv"
@@ -149,4 +150,11 @@ func TrElementCh(elementch string) string {
 		return elementch
 	}
 	return "?"
+}
+
+func RootCheck() bool {
+	if user, err := user.Current(); err == nil {
+		return user.Username == "root"
+	}
+	return false // unable to see current user
 }
