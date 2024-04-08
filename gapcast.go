@@ -8,6 +8,7 @@ import (
 	"gapcast/libs/jsonreader"
 	"math"
 	"os"
+	"os/exec"
 	"runtime"
 	"slices"
 	"sort"
@@ -16,6 +17,7 @@ import (
 	"sync"
 	"text/tabwriter"
 	"time"
+
 	bettercap "github.com/bettercap/bettercap/packets"
 	"github.com/eiannone/keyboard"
 	colo "github.com/fatih/color"
@@ -87,6 +89,7 @@ func collect() ([]int, string, string, string, bool, string, bool, bool, string)
 	var beacon *bool = flag.Bool("beacon", false, "")
 	var iface *string = flag.String("i", "?", "")
 	var showi *bool = flag.Bool("show-i", false, "")
+	var nmrestart *bool = flag.Bool("nm-restart", false, "")
 	var sc *string = flag.String("sc", "?", "")
 
 	flag.Usage = func() {
@@ -101,6 +104,8 @@ func collect() ([]int, string, string, string, bool, string, bool, bool, string)
 		fmt.Println("        Start with 5 Ghz band.")
 		fmt.Println("   -2.4+5g")
 		fmt.Println("        Start with 2.4/5 Ghz band.")
+		fmt.Println("   -nm-restart")
+		fmt.Println("        Restart Network Manager. (Only for Linux)")
 		fmt.Println()
 		fmt.Println("Filter misc:")
 		fmt.Println("   -c <channel> : int")
@@ -132,7 +137,53 @@ func collect() ([]int, string, string, string, bool, string, bool, bool, string)
 	flag.Parse()
 
 	if *showi {
-		printInterfacesInfo()
+		if libs.RootCheck() {
+			if runtime.GOOS == "windows" {
+				fmt.Println("HW-ADDR               NAME")
+				for _, iface := range libs.ShowIfaces() {
+					fmt.Println(iface.Name + "     " + iface.Mac)
+				}
+			} else {
+				var writer *tabwriter.Writer = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+				fmt.Fprintln(writer, "Interface\tHW-ADDR\tMode\tChannel\tTXpower\tDriver\tChipset")
+				var exist int = 0
+				for _, iface := range libs.ShowIfaces() {
+					ifaceinfo, err := libs.GetIfaceInfo(iface.Name) 
+					if err {
+						continue
+					}
+					fmt.Fprintln(writer, iface.Name + "\t" + iface.Mac + "\t" + ifaceinfo[0] + "\t" + ifaceinfo[1] + "\t" + ifaceinfo[2] + "\t" + ifaceinfo[3] + "\t" + ifaceinfo[4])
+					exist++
+				}
+				if exist > 0 {
+					writer.Flush()
+				} else {
+					fmt.Println("No valid interface found.")
+				}
+			}
+		} else {
+			fmt.Println("Unrooted.")
+		}
+		os.Exit(0)
+	}
+
+	if *nmrestart {
+		if runtime.GOOS == "linux" {
+			if libs.RootCheck() {
+				var nmrestartSeq []string = []string{"service networking restart", "service NetworkManager restart"}
+				for _, nmcmd := range nmrestartSeq {
+					if _, err := libs.Rtexec(exec.Command("bash", "-c", nmcmd)); err {
+						fmt.Println("Unable to restart Network Manager.")
+						os.Exit(0)
+					}
+				}
+				fmt.Println("Network Manager restarted successful.")
+			} else {
+				fmt.Println("Unrooted.")
+			}
+		} else {
+			fmt.Println("Valid parameter for only Linux system.")
+		}
 		os.Exit(0)
 	}
 
@@ -242,32 +293,6 @@ func collect() ([]int, string, string, string, bool, string, bool, bool, string)
 	}
 
 	return ChannelList, *write, *iface, strings.ToLower(*prefix), *dinac, *load, loadScan, *beacon, *sc
-}
-
-func printInterfacesInfo() {
-	if runtime.GOOS == "windows" {
-		fmt.Println("HW-ADDR               NAME")
-		for _, iface := range libs.ShowIfaces() {
-			fmt.Println(iface.Name + "     " + iface.Mac)
-		}
-	} else {
-		var writer *tabwriter.Writer = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-		fmt.Fprintln(writer, "Interface\tHW-ADDR\tMode\tChannel\tTXpower\tDriver\tChipset")
-		var exist int = 0
-		for _, iface := range libs.ShowIfaces() {
-			ifaceinfo, err := libs.GetIfaceInfo(iface.Name) 
-			if err {
-				continue
-			}
-			fmt.Fprintln(writer, iface.Name + "\t" + iface.Mac + "\t" + ifaceinfo[0] + "\t" + ifaceinfo[1] + "\t" + ifaceinfo[2] + "\t" + ifaceinfo[3] + "\t" + ifaceinfo[4])
-			exist++
-		}
-		if exist > 0 {
-			writer.Flush()
-		} else {
-			fmt.Println("No valid interface found.")
-		}
-	}
 }
 
 func signalExit(nameiface string, oldmoment bool) {
