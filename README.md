@@ -80,7 +80,7 @@ gapcast.exe -i <interface>
 ./gapcast -i <iface> -2.4+5g -d
 ```
 > **Note**
-> Scans all 2.4/5 Ghz channels disabling [shifting of inactive devices](https://github.com/ANDRVV/gapcast#what-is-shifting-of-inactive-devices).
+> Scans all 2.4/5 Ghz channels disabling shifting of inactive devices.
 
 <h3>SCAN-ALL-FREQ-OF-ONE-AP</h3>
 
