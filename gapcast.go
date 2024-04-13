@@ -17,7 +17,6 @@ import (
 	"sync"
 	"text/tabwriter"
 	"time"
-
 	bettercap "github.com/bettercap/bettercap/packets"
 	"github.com/eiannone/keyboard"
 	colo "github.com/fatih/color"
