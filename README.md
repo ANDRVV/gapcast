@@ -173,5 +173,5 @@ gapcast.exe -i <interface>
 
 <h1 align="center">Future features</h1>
 <ul>
-<li>Evil Twin attack (v?)</li>
+<li>Customizable dBi & dBm for radar + new command that get the localization info</li>
 </ul>
