@@ -12,7 +12,9 @@
 
 [![Go](https://github.com/ANDRVV/gapcast/actions/workflows/go.yml/badge.svg)](https://github.com/ANDRVV/gapcast/actions/workflows/go.yml) [![CodeQL](https://github.com/ANDRVV/gapcast/actions/workflows/codeql.yml/badge.svg)](https://github.com/ANDRVV/gapcast/actions/workflows/codeql.yml) [![Codacy Security Scan](https://github.com/ANDRVV/gapcast/actions/workflows/codacy.yml/badge.svg)](https://github.com/ANDRVV/gapcast/actions/workflows/codacy.yml)
 </div>
+
 <h1 align="center">How to run Gapcast</h1>
+
 <p><strong>Requirements</strong></p>
 <p><code><a href="https://github.com/golang/go">Go</a> 1.21.1+</code></p>
 <p><code><a href="https://github.com/aircrack-ng/aircrack-ng">Aircrack-ng</a> (Airmon-ng) only for <strong>GNU/Linux</strong></code></p>
