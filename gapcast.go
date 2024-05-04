@@ -44,6 +44,9 @@ var (
 	injblock             bool                         = false
 	alreadyDKeyReg       bool                         = false
 	sngtrgLoading        bool                         = false
+	tdaPresent           bool                         = false
+	rdaPresent           bool                         = false
+	pddPresent           bool                         = false
 	mt                   chan bool                    = make(chan bool)
 	mtLoading            chan bool                    = make(chan bool)
 	exitChannel          chan bool                    = make(chan bool)
@@ -55,6 +58,9 @@ var (
 	globalChannel        int                          = 0
 	tableScene           int                          = 0
 	errTable             int                          = 0
+	txdbiAnt             float64                      = 0
+	rxdbiAnt             float64                      = 0
+	pwrdbmDevice         float64                      = 0
 	chTable              string                       = ""
 	srcTable             string                       = ""
 	dstTable             string                       = ""
@@ -86,6 +92,9 @@ func collect() ([]int, string, string, string, bool, string, bool, bool, string)
 	var dinac *bool = flag.Bool("d", false, "")
 	var radar *bool = flag.Bool("radar", false, "")
 	var beacon *bool = flag.Bool("beacon", false, "")
+	var txdbi *string = flag.String("dbi-tx", "?", "")
+	var rxdbi *string = flag.String("dbi-rx", "?", "")
+	var pwrdbm *string = flag.String("dbm", "?", "")
 	var iface *string = flag.String("i", "?", "")
 	var showi *bool = flag.Bool("show-i", false, "")
 	var nmrestart *bool = flag.Bool("nm-restart", false, "")
@@ -130,6 +139,14 @@ func collect() ([]int, string, string, string, bool, string, bool, bool, string)
 		fmt.Println("Features:")
 		fmt.Println("    -sc <BSSID> : string")
 		fmt.Println("        Scan a single target carefully.")
+		fmt.Println()
+		fmt.Println("Radar misc:")
+		fmt.Println("    -dbi-tx <int (or float)>")
+		fmt.Println("        Set TX antenna dBi.")
+		fmt.Println("    -dbi-rx <int (or float)>")
+		fmt.Println("        Set RX antenna dBi.")
+		fmt.Println("    -dbm <int (or float)>")
+		fmt.Println("        Set TX power.")
 		os.Exit(1)
 	}
 
@@ -247,6 +264,31 @@ func collect() ([]int, string, string, string, bool, string, bool, bool, string)
 	}
 	if *sc != "?" {
 		lencount += 2
+	}
+	var errc error
+	if *txdbi != "?" {
+		if txdbiAnt, errc = strconv.ParseFloat(*txdbi, 64); errc != nil {
+			fmt.Println("TX dBi " + *txdbi + " is not int or float.\n")
+			flag.Usage()
+		}
+		lencount += 2
+		tdaPresent = true
+	}
+	if *rxdbi != "?" {
+		if rxdbiAnt, errc = strconv.ParseFloat(*rxdbi, 64); errc != nil {
+			fmt.Println("RX dBi " + *rxdbi + " is not int or float.\n")
+			flag.Usage()
+		}
+		lencount += 2
+		rdaPresent = true
+	}
+	if *pwrdbm != "?" {
+		if pwrdbmDevice, errc = strconv.ParseFloat(*pwrdbm, 64); errc != nil {
+			fmt.Println("TX Power " + *pwrdbm + " is not int or float.\n")
+			flag.Usage()
+		}
+		lencount += 2
+		pddPresent = true
 	}
 
 	if len(os.Args) - 1 > lencount {
@@ -382,10 +424,23 @@ func setup(file string, nameiface string, load bool, pcapfile string) string {
 		signalExit(nameiface, false)
 	}
 	go libs.Loading("[" + color.Green + "INIT" + color.White + "] Loading resources", mt)
-	var warning1, warning2 bool
+	var warning1, warning2 bool = false, false
 	macdb, warning1 = jsonreader.ReadMacdb()
 	if rssiradar {
-		radarconf, warning2 = jsonreader.ReadRadarConf()
+		if tdaPresent && rdaPresent && pddPresent {
+			radarconf = jsonreader.RadarConf{TXAntennaDBI: txdbiAnt, RXAntennaDBI: rxdbiAnt, TXPowerDBM: pwrdbmDevice}
+		} else {
+			radarconf, warning2 = jsonreader.ReadRadarConf()
+			if tdaPresent {
+				radarconf.TXAntennaDBI = txdbiAnt
+			}
+			if rdaPresent {
+				radarconf.RXAntennaDBI = rxdbiAnt
+			}
+			if pddPresent {
+				radarconf.TXPowerDBM = pwrdbmDevice
+			}
+		}
 	}
 	setupChart()
 	time.Sleep(1500 * time.Millisecond)
@@ -413,7 +468,11 @@ func setup(file string, nameiface string, load bool, pcapfile string) string {
 		time.Sleep(1200 * time.Millisecond)
 	}
 	if warning2 {
-		fmt.Println("[" + color.Yellow + "WARNING" + color.White + "] Failure to read RadioRSSI config, set default.")
+		if tdaPresent || rdaPresent || pddPresent {
+			fmt.Println("[" + color.Yellow + "WARNING" + color.White + "] Failure to read RadioRSSI config, set default. (Applied with custom conf)")
+		} else {
+			fmt.Println("[" + color.Yellow + "WARNING" + color.White + "] Failure to read RadioRSSI config, set default.")
+		}
 		time.Sleep(1200 * time.Millisecond)
 	}
 	oldmoment = false
@@ -1294,6 +1353,7 @@ func deepScanning(ChannelList []int, nameiface string, iface string, bssid strin
 									 "Analysis target", 
 									 "Finalization of target's data"}
 	sngtrgLoading = true
+	var customRadarconf jsonreader.RadarConf = radarconf
 	time.Sleep(1 * time.Second)
 	for stage < 4 {
 		if stage == 1 {
@@ -1374,6 +1434,7 @@ func deepScanning(ChannelList []int, nameiface string, iface string, bssid strin
 				} else {
 					deviceDBM = dbmreg[drlen]
 				}
+				radarconf, _ = jsonreader.ReadRadarConf()
 				for _, dbmlevel := range []float64{2, 3, 5} {
 					radarconf.TXAntennaDBI = dbmlevel
 					switch dbmlevel {
@@ -1414,6 +1475,9 @@ func deepScanning(ChannelList []int, nameiface string, iface string, bssid strin
 			deviceType = "STATION"
 		case false:
 			deviceType = "ACCESS-POINT"
+	}
+	if tdaPresent || rdaPresent || pddPresent {
+		fmt.Println(color.White + "     | [" + color.Blue + "CUSTM-CONF" + color.White + "]  " + libs.RadioLocalize(deviceDBM, info.Channel, customRadarconf))
 	}
 	fmt.Println(color.White + "     | [" + color.Blue + "DEVICE-TYPE" + color.White + "] " + deviceType)
 	fmt.Println("\n" + color.White + "   =========================")
