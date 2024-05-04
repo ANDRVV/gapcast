@@ -55,16 +55,16 @@ var (
 	inactiveDevice       map[string]libs.Device       = make(map[string]libs.Device)
 	mutex                sync.RWMutex                 = sync.RWMutex{}
 	analysisData         *libs.Alldata                = new(libs.Alldata)
-	globalChannel        int                          = 0
-	tableScene           int                          = 0
-	errTable             int                          = 0
-	txdbiAnt             float64                      = 0
-	rxdbiAnt             float64                      = 0
-	pwrdbmDevice         float64                      = 0
-	chTable              string                       = ""
-	srcTable             string                       = ""
-	dstTable             string                       = ""
-	esdTable             string                       = ""
+	globalChannel        int
+	tableScene           int
+	errTable             int
+	txdbiAnt             float64
+	rxdbiAnt             float64
+	pwrdbmDevice         float64
+	chTable              string
+	srcTable             string
+	dstTable             string
+	esdTable             string
 	capturedEapol        []string
 	macFilter            string
 	handle               *pcap.Handle
