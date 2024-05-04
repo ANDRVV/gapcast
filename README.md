@@ -182,5 +182,5 @@ Click for about of [Single Deep Scanning](https://github.com/ANDRVV/gapcast/wiki
 
 <h1 align="center">Future features</h1>
 <ul>
-<li>Customizable dBi & dBm for radar + new command that get the localization info</li>
+<li>New attack from INJ Table</li>
 </ul>
