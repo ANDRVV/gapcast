@@ -137,7 +137,7 @@ Click for about of [Single Deep Scanning](https://github.com/ANDRVV/gapcast/wiki
 ```
 > **Note**
 > 
-> Scan only channel 11 to get the best WPA 4-Way Handshake, To deauthenticate you need to open the gapcast injection table by pressing **[CTRL-P]**, then select the De-Auth type, enter the required information and start the attack by pressing **CTRL-D** key for a few seconds (check that clients are present via the light-blue bar), as soon as the **CTRL-D** key is deactivated, the clients that reconnect to the *Access Point*:
+> Scan only AP's channel (11) to get the best WPA 4-Way Handshake, To deauthenticate you need to open the gapcast injection table by pressing **[CTRL-P]**, then select the De-Auth type, enter the required information and start the attack by pressing **CTRL-D** key for a few seconds (check that clients are present via the light-blue bar), as soon as the **CTRL-D** key is deactivated, the clients that reconnect to the *Access Point*:
 > 
 > Will **send and receive EAPOL packets** which you will record and save with the ```-w <file>.pcap``` parameter.
 
