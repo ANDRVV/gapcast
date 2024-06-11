@@ -9,6 +9,7 @@ import (
 	"net"
 	"os/exec"
 	"runtime"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -20,10 +21,14 @@ import (
 
 var (
 	maxRetryMonitorSniffer int = 10
+	LAcode []string = []string{"2", "6", "A", "E", "3", "7", "B", "F"}
 )
 
 func GetManufacturer(macdb []jsonreader.Macdb, mac string) string {
 	mac = strings.ToUpper(mac)
+	if slices.Contains(LAcode, string(strings.ReplaceAll(mac, ":", "")[1])) {
+		return "<RandOUI; Invalid OUI>"
+	}
 	for _, data := range macdb {
 		if strings.HasPrefix(mac, data.Mac) {
 			return data.Manufacturer
