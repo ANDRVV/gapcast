@@ -397,7 +397,7 @@ func setup(file string, nameiface string, load bool, pcapfile string) string {
 	color = libs.SetupColors()
 	libs.PrintLogo(color, "Initializing...")
 	if !libs.AlreadyMon(nameiface) {
-		if !libs.MonSupportCheck() {
+		if !libs.MonManagementCheck() {
 			if runtime.GOOS == "windows" {
 				libs.SignalError(color, "Npcap not installed.")
 			} else {
