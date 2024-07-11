@@ -94,7 +94,6 @@ func ShowIfaces() []Ifaces {
 
 func SetManagedMode(nameiface string) { 
 	if runtime.GOOS == "windows" {
-		Rtexec(exec.Command("cmd", "/c", "wlanhelper", nameiface, "mode", "managed"))
 	} else {
 	}
 }
