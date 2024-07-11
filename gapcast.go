@@ -405,7 +405,7 @@ func setup(file string, nameiface string, load bool, pcapfile string) string {
 			}
 		}
 		go libs.Loading("[" + color.Green + "INIT" + color.White + "] Setting up monitor mode", mt)
-		if _, err := libs.SetMonitorMode(nameiface); err {
+		if err := libs.SetMonitorMode(nameiface); err {
 			mt <- true
 			time.Sleep(400 * time.Millisecond)
 			fmt.Println()
