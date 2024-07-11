@@ -69,7 +69,7 @@ Click for about of [Single Deep Scanning](https://github.com/ANDRVV/gapcast/wiki
 ```bash
 ./gapcast -i <iface> -sc 03:e9:58:65:2a:86 -2.4+5g
 ```
-> **Note**
+> [!Note]
 > 
 > With the `-sc <mac>` parameter scans the target in depth, using this method however discards all the other parameters, except for `-i <iface>` and the band selection such as `-5g` or `-2.4+5g`.
 
@@ -78,7 +78,7 @@ Click for about of [Single Deep Scanning](https://github.com/ANDRVV/gapcast/wiki
 ```bash
 ./gapcast -i <iface> -2.4+5g -d
 ```
-> **Note**
+> [!Note]
 > 
 > Scans all 2.4/5 Ghz channels disabling shifting of inactive devices.
 
@@ -87,7 +87,7 @@ Click for about of [Single Deep Scanning](https://github.com/ANDRVV/gapcast/wiki
 ```bash
 ./gapcast -i <iface> -2.4+5g -c 10,36 -p 03:e9:58:65:2a:8
 ```
-> **Note**
+> [!Note]
 > 
 > *Access Point* that have 5 Ghz and 2.4 Ghz transmit via 2 different addresses, the address for 5 Ghz and the one for 2.4 Ghz. In most cases these 2 addresses have a Mac address with a very similar prefix:
 > 
@@ -99,7 +99,7 @@ Click for about of [Single Deep Scanning](https://github.com/ANDRVV/gapcast/wiki
 ```bash
 ./gapcast -i <iface> -2.4+5g -radar
 ```
-> **Note**
+> [!Note]
 >
 > Scan all 2.4/5 Ghz channels showing the approximate radius of the location in meters with the ```-radar``` parameter using the [RadarRSSI library](https://github.com/ANDRVV/RadarRSSI), [more info](https://github.com/ANDRVV/gapcast/wiki#-radar).
 
@@ -108,7 +108,7 @@ Click for about of [Single Deep Scanning](https://github.com/ANDRVV/gapcast/wiki
 ```bash
 ./gapcast -i <iface>
 ```
-> **Note**
+> [!Note]
 > 
 > Scans all 2.4 channels.
 
@@ -117,7 +117,7 @@ Click for about of [Single Deep Scanning](https://github.com/ANDRVV/gapcast/wiki
 ```bash
 ./gapcast -i <iface> -5g
 ```
-> **Note**
+> [!Note]
 > 
 > Scans all 5 Ghz channels adding ```-5g``` parameter.
 
@@ -126,7 +126,7 @@ Click for about of [Single Deep Scanning](https://github.com/ANDRVV/gapcast/wiki
 ```bash
 ./gapcast -i <iface> -2.4+5g -w out.pcap
 ```
-> **Note**
+> [!Note]
 > 
 > Scans all 2.4/5 Ghz channels, recording it and saving to a pcap file. Registration can be done by adding the ```-w <file>.pcap``` parameter.
 
@@ -135,7 +135,7 @@ Click for about of [Single Deep Scanning](https://github.com/ANDRVV/gapcast/wiki
 ```bash
 ./gapcast -i <iface> -c 11 -b a3:65:1b:56:7e:3c -w out.pcap
 ```
-> **Note**
+> [!Note]
 > 
 > Scan only AP's channel (11) to get the best WPA 4-Way Handshake, To deauthenticate you need to open the gapcast injection table by pressing **[CTRL-P]**, then select the De-Auth type, enter the required information and start the attack by pressing **CTRL-D** key for a few seconds (check that clients are present via the light-blue bar), as soon as the **CTRL-D** key is deactivated, the clients that reconnect to the *Access Point*:
 > 
@@ -146,7 +146,7 @@ Click for about of [Single Deep Scanning](https://github.com/ANDRVV/gapcast/wiki
 ```bash
 ./gapcast -l out.pcap
 ```
-> **Note**
+> [!Note]
 > 
 > If you want to restore data from a previous scan, done with [gapcast](https://github.com/ANDRVV/gapcast), [wireshark](https://github.com/wireshark/wireshark) or other tools and load them on the [gapcast](https://github.com/ANDRVV/gapcast) table to better analyze the data, just insert the ```-l <file>.pcap``` parameter, if you want to restore the data and continue the scan you must add the ```-i <iface>``` parameter and/or add other additional parameters.
 
@@ -155,7 +155,7 @@ Click for about of [Single Deep Scanning](https://github.com/ANDRVV/gapcast/wiki
 ```bash
 ./gapcast -i <iface> -2.4+5g -beacon 
 ```
-> **Note**
+> [!Note]
 > 
 > If you want to show or record only the *Access Points* you must enter the ```-beacon``` parameter. For this technique, where we show all *Access Points* of all channels it is necessary to add the parameter ```-2.4+5g```.
 
@@ -172,7 +172,7 @@ Click for about of [Single Deep Scanning](https://github.com/ANDRVV/gapcast/wiki
     <li><code>RTL8821CU</code> mon</li>
 </ul>
 
-> **Note**
+> [!Note]
 > 
 > If your driver is not supported or if you would like to boot into monitor mode with your changes, just do so before starting gapcast. **If gapcast recognizes that the interface has already set monitor mode, it will not make any changes or even try to restart monitor mode**.
 
