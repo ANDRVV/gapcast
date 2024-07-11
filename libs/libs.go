@@ -281,9 +281,9 @@ func GetIfaceFromName(nameiface string) string {
 func GetIfaceInfo(nameiface string) ([]string, bool) {
 	if busInfo, err := Rtexec(exec.Command("bash", "-c", "cut -d \":\" -f 2 \"/sys/class/net/" + nameiface + "/device/modalias\" | cut -b 1-10 | sed 's/^.//;s/p/:/'")); !err {
 		if chipset, err1 := Rtexec(exec.Command("bash", "-c", "lsusb -d \"" + busInfo + "\" | head -n1 - | cut -f3- -d \":\" | sed 's/^....//;s/ Network Connection//g;s/ Wireless Adapter//g;s/^ //'")); !err1 {
+			if strings.Contains(chipset, "Usage: lsusb") {
 			if mode_ch_dbm, err2 := Rtexec(exec.Command("bash", "-c", "iw " + nameiface + " info | grep -E \"type|channel|txpower\" | awk '{print $2}'")); !err2 {
 				var mode_ch_dbm_list []string = strings.Split(mode_ch_dbm, "\n")
-				if driver, err3 := mon.GetDriver(nameiface); err3 {
 					return []string{mode_ch_dbm_list[0], mode_ch_dbm_list[1], mode_ch_dbm_list[2], driver, chipset}, false
 				}
 			}
