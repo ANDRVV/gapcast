@@ -762,10 +762,10 @@ func GetEncString(exist bool, ENC string, CIPHER string, AUTH string) (bool, str
 	}
 	var CIPAUT []string
 	if ENC != "OPEN" {
-		if !(CIPHER == "UNK" || CIPHER == "" || !IsValid(CIPHER)) {
+		if !(CIPHER == "UNK" || CIPHER == "") {
 			CIPAUT = append(CIPAUT, CIPHER)
 		}
-		if !(AUTH == "UNK" || AUTH == "" || !IsValid(AUTH)) {
+		if !(AUTH == "UNK" || AUTH == "") {
 			CIPAUT = append(CIPAUT, AUTH)
 		}
 		if len(CIPAUT) == 2 {
