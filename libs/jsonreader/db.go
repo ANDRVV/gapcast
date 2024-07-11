@@ -6,6 +6,7 @@ import (
 	"os"
 )
 
+// Read vendors database
 func ReadMacdb() ([]Macdb, bool) {
 	path, err := os.Getwd()
 	if err != nil {

@@ -6,6 +6,7 @@ import (
 	"os"
 )
 
+// Read radar config
 func ReadRadarConf() (RadarConf, bool) {
 	path, err := os.Getwd()
 	if err != nil {

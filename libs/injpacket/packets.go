@@ -16,6 +16,7 @@ var (
 	}
 )
 
+// Craft De-Auth packet
 func Deauth(bssid string, target string, seq int) []gopacket.SerializableLayer {
 	var src, dst []byte = macToBytes(bssid), nil
 	if target == "" {
@@ -40,6 +41,7 @@ func Deauth(bssid string, target string, seq int) []gopacket.SerializableLayer {
 	}
 }
 
+// Craft Beacon packet
 func Beacon(essid string, bssid string, channel int, seq int) []gopacket.SerializableLayer {
 	var src []byte = macToBytes(bssid) 
 	return []gopacket.SerializableLayer {
@@ -71,6 +73,7 @@ func Beacon(essid string, bssid string, channel int, seq int) []gopacket.Seriali
 	}
 }
 
+// Craft 802.11 Info layer
 func extra(id layers.Dot11InformationElementID, data []byte) *layers.Dot11InformationElement {
 	return &layers.Dot11InformationElement {
 		ID:     id,

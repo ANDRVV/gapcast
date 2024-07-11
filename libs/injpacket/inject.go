@@ -6,6 +6,8 @@ import (
 	"github.com/google/gopacket/pcap"
 )
 
+
+// Convert packet (gopacket model) to byte list
 func bytesConv(layers ...gopacket.SerializableLayer) (bool, []byte) {
 	var buf gopacket.SerializeBuffer = gopacket.NewSerializeBuffer()
 	if err := gopacket.SerializeLayers(buf, gopacket.SerializeOptions{
@@ -17,6 +19,7 @@ func bytesConv(layers ...gopacket.SerializableLayer) (bool, []byte) {
 	return false, buf.Bytes()
 }
 
+// Inject packet to destination
 func InjectPacket(handle *pcap.Handle, nameiface string, channel int, prevch int, layers []gopacket.SerializableLayer) (SendedSuccessful bool) {
 	if err, packet := bytesConv(layers...); !err {
 		if prevch != channel {
