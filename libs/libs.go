@@ -94,15 +94,44 @@ func ShowIfaces() []Ifaces {
 
 func SetManagedMode(nameiface string) { 
 	if runtime.GOOS == "windows" {
+		Rtexec(exec.Command("cmd", "/c", fmt.Sprintf("wlanhelper %s mode managed", nameiface)))
 	} else {
+		if err := mon.SetMode(nameiface, mon.MANAGED); err {
+			for _, ifaces := range ShowIfaces() {
+				if strings.Contains(ifaces.Name, nameiface) {
+					phyface, _ := Rtexec(exec.Command("bash", "-c", "ls /sys/class/net/" + ifaces.Name + "/device/ieee80211 | awk '{print $1}'"))
+					Rtexec(exec.Command("bash", "-c", "iw " + ifaces.Name + " del"))
+					Rtexec(exec.Command("bash", "-c", "iw phy " + phyface + " interface add " + nameiface + " type managed"))
+					return
+				}
+			}
+		}
 	}
 }
 
+func SetMonitorMode(nameiface string) (err bool) {
     if runtime.GOOS == "windows" {
-		return Rtexec(exec.Command("cmd", "/c", "wlanhelper", nameiface, "mode", "monitor"))
 		_, err := Rtexec(exec.Command("cmd", "/c", "wlanhelper", nameiface, "mode", "monitor"))
+		return err
 	} else {
 		Rtexec(exec.Command("airmon-ng", "check", "kill"))
+		if err := mon.SetMode(nameiface, mon.MONITOR); err {
+			return true
+		}
+		for _, ifaces := range ShowIfaces() {
+			if fsiface, _ := strings.CutSuffix(ifaces.Name, "mon"); fsiface == nameiface && ifaces.Name != nameiface {
+				if _, err = Rtexec(exec.Command("bash", "-c", "ip link set " + ifaces.Name + " name " + nameiface)); !err {
+					return false
+				}
+				
+			}
+		}
+		for _, ifaces := range ShowIfaces() {
+			if strings.Contains(ifaces.Name, nameiface) && ifaces.Name != nameiface {
+				_, err = Rtexec(exec.Command("bash", "-c", "ip link set " + ifaces.Name + " name " + nameiface))
+			}
+		}
+		return err
 	}
 }
 
