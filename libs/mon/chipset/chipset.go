@@ -60,6 +60,6 @@ var (
 )
 
 // Build command using chip steps for exec
-func BuildCommand(commands []string, nameiface string) *exec.Cmd {
+func BuildCommand(commands []string, nameiface string) (command *exec.Cmd) {
 	return exec.Command("bash", "-c", strings.ReplaceAll(strings.Join(commands, " | "), "<iface>", nameiface))
 }

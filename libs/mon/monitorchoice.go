@@ -35,19 +35,19 @@ func SetMode(nameiface string, toMode mode) (err bool) {
 	return false
 }
 
-// Get the driver name of iface
-func GetDriver(nameiface string) (string, bool) {
+// Get the driver name of interface
+func GetDriver(nameiface string) (driverName string, err bool) {
 	driver, err := Rtexec(exec.Command("bash", "-c", fmt.Sprintf("ethtool -i %s | grep driver | awk '{print $2}'", nameiface)))
 	return strings.ReplaceAll(driver, "\n", ""), err
 }
 
 // Execute commands on OS shell
-func Rtexec(cmd *exec.Cmd) (string, bool) {
-	output, err := cmd.CombinedOutput()
-    if err != nil {
-        if strings.Contains(err.Error(), "exit status") {   
-            return string(output), true
+func Rtexec(cmd *exec.Cmd) (output string, err bool) {
+	cmdoutput, err1 := cmd.CombinedOutput()
+    if err1 != nil {
+        if strings.Contains(err1.Error(), "exit status") {   
+            return string(cmdoutput), true
         }
     }
-	return string(output), false
+	return string(cmdoutput), false
 }
