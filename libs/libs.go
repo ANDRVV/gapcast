@@ -96,16 +96,14 @@ func SetManagedMode(nameiface string) {
 	if runtime.GOOS == "windows" {
 		Rtexec(exec.Command("cmd", "/c", "wlanhelper", nameiface, "mode", "managed"))
 	} else {
-		mon.GetMode(nameiface, mon.MANAGED)
 	}
 }
 
-func SetMonitorMode(nameiface string) (string, bool) {
     if runtime.GOOS == "windows" {
 		return Rtexec(exec.Command("cmd", "/c", "wlanhelper", nameiface, "mode", "monitor"))
+		_, err := Rtexec(exec.Command("cmd", "/c", "wlanhelper", nameiface, "mode", "monitor"))
 	} else {
 		Rtexec(exec.Command("airmon-ng", "check", "kill"))
-		return "", mon.GetMode(nameiface, mon.MONITOR)
 	}
 }
 
