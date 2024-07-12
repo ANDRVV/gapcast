@@ -1,3 +1,5 @@
+<meta name="description" content="Gapcast is an IEEE 802.11 packet injection and analyzer software. The purpose of gapcast is to accurately detect each router's clients, analyze, capture and inject packets. Gapcast adds more and more parameters for filters and functionality during releases. Gapcast therefore requires good documentation to use the software to its fullest.">
+
 <div align="center" style="display:grid;place-items:center;">
 <p>
     <img src="https://github.com/ANDRVV/gapcast/blob/main/images/gapcast-t.png?raw=true" alt="Gapcast logo">
@@ -11,17 +13,14 @@
 <div align="center" style="display:grid;place-items:center;">
 
 [![Go](https://github.com/ANDRVV/gapcast/actions/workflows/go.yml/badge.svg)](https://github.com/ANDRVV/gapcast/actions/workflows/go.yml) [![CodeQL](https://github.com/ANDRVV/gapcast/actions/workflows/codeql.yml/badge.svg)](https://github.com/ANDRVV/gapcast/actions/workflows/codeql.yml) [![Codacy Security Scan](https://github.com/ANDRVV/gapcast/actions/workflows/codacy.yml/badge.svg)](https://github.com/ANDRVV/gapcast/actions/workflows/codacy.yml)
+
+[![GoReportCard](https://goreportcard.com/badge/github.com/nanomsg/mangos)](https://goreportcard.com/report/github.com/andrvv/gapcast)
 </div>
 
-<h1 align="center">How to run Gapcast</h1>
+<h1 align="center">How to install & run Gapcast</h1>
 
-<p><strong>Requirements</strong></p>
-<p><code><a href="https://github.com/golang/go">Go</a> 1.21.1+</code></p>
-<p><code><a href="https://github.com/aircrack-ng/aircrack-ng">Aircrack-ng</a> (Airmon-ng) only for <strong>GNU/Linux</strong></code></p>
-<p><code><a href="https://github.com/nmap/npcap">Npcap</a> (Wlanhelper) only for <strong>Windows 8.1+</strong></code></p>
+<p align="center">For <strong>GNU/Linux</strong>:</p>
 </div>
-
-<p align="center">For <strong>GNU/Linux</strong></p>
 
 ```bash
 git clone https://github.com/ANDRVV/gapcast.git
@@ -29,14 +28,7 @@ cd gapcast
 go build -buildvcs=false
 ./gapcast -i <interface>
 ```
-<p align="center">For <strong>Windows 8.1+</strong></p>
 
-```bash
-git clone https://github.com/ANDRVV/gapcast.git
-cd gapcast
-go build
-gapcast.exe -i <interface>
-```
 ![](https://github.com/ANDRVV/gapcast/blob/main/images/gapcast-scan.png?raw=true)
 
 <h1 align="center">Injection Table</h1>
@@ -48,12 +40,12 @@ gapcast.exe -i <interface>
 <ul>
     <li>You don't need to specify the channel.</li>
     <li>You don't need to specify the BSSID.</li>
-    <li>Multiple synchronized attacks. (Over 100 devices can be attacked simultaneously)</li>
+    <li>Multiple synchronized attacks.</li>
     <li>Quick and easy attack initialization.</li>
     <li>Interface with attack information.</li>
 </ul>
 
-<p>For more info <a href="https://github.com/ANDRVV/gapcast/wiki/Injection-Table">click here</a></p>
+<p>For more info <a href="https://github.com/ANDRVV/gapcast/wiki/Injection-Table">click here</a>.</p>
 
 <br>
 
@@ -163,7 +155,7 @@ Click for about of [Single Deep Scanning](https://github.com/ANDRVV/gapcast/wiki
 
 <h1 align="center">Monitor mode handler</h1>
 
-<p>For each driver there is a correct <strong>sequence of commands to start the network card correctly in monitor mode</strong>. <strong>Drivers supported by gapcast can also have a txpower modification, bug fixing etc</strong>, as in the case of the RTL8812AU chipset which can be increased to a txpower of 30 dBm. If the driver is not supported, it will start monitor mode directly with Airmon-ng.</p>
+<p>For each driver there is a correct <strong>sequence of commands to start the network card correctly in monitor mode</strong>. <strong>Drivers supported by gapcast can also have a txpower modification, bug fixing etc</strong>, as in the case of the RTL8812AU chipset which can be increased to a txpower of 30 dBm. If the driver is not supported, it will start monitor mode directly with airmon-ng.</p>
 <p>Supported drivers:</p>
 <ul>
     <li><code>RTL88XXAU</code> mon+txpower</li>
@@ -172,13 +164,9 @@ Click for about of [Single Deep Scanning](https://github.com/ANDRVV/gapcast/wiki
     <li><code>RTL8821CU</code> mon</li>
 </ul>
 
-> [!Note]
+> [!IMPORTANT]
 > 
 > If your driver is not supported or if you would like to boot into monitor mode with your changes, just do so before starting gapcast. **If gapcast recognizes that the interface has already set monitor mode, it will not make any changes or even try to restart monitor mode**.
-
-> **Warning**
-> 
-> This function is only available for GNU/Linux systems.
 
 <h1 align="center">Future features</h1>
 <ul>
