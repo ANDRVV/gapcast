@@ -2,9 +2,9 @@ package mon
 
 import (
 	"fmt"
+	chipset "gapcast/libs/mon/chipset"
 	"os/exec"
 	"strings"
-	chipset "gapcast/libs/mon/chipset"
 )
 
 type mode int
@@ -20,10 +20,10 @@ func SetMode(nameiface string, toMode mode) (err bool) {
 		if chip, exist := chipset.Drivers[strings.ToLower(driver)]; exist { // select chip for appropiate command
 			var err2 bool = true // default is error, in case mode isn't recognized
 			switch toMode {
-				case MONITOR:
-					_, err2 = Rtexec(chipset.BuildCommand(chip.MONITOR, nameiface))
-				case MANAGED:
-					_, err2 = Rtexec(chipset.BuildCommand(chip.MANAGED, nameiface))
+			case MONITOR:
+				_, err2 = Rtexec(chipset.BuildCommand(chip.MONITOR, nameiface))
+			case MANAGED:
+				_, err2 = Rtexec(chipset.BuildCommand(chip.MANAGED, nameiface))
 			}
 			return err2
 		}
@@ -44,10 +44,10 @@ func GetDriver(nameiface string) (driverName string, err bool) {
 // Execute commands on OS shell
 func Rtexec(cmd *exec.Cmd) (output string, err bool) {
 	cmdoutput, err1 := cmd.CombinedOutput()
-    if err1 != nil {
-        if strings.Contains(err1.Error(), "exit status") {   
-            return string(cmdoutput), true
-        }
-    }
+	if err1 != nil {
+		if strings.Contains(err1.Error(), "exit status") {
+			return string(cmdoutput), true
+		}
+	}
 	return string(cmdoutput), false
 }
