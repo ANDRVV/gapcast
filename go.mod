@@ -1,4 +1,4 @@
-module gapcast
+module github.com/andrvv/gapcast
 
 go 1.21.1
 

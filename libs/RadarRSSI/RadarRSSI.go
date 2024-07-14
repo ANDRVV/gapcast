@@ -1,7 +1,7 @@
 package RadarRSSI
 
 import (
-	"gapcast/libs/RadarRSSI/libs"
+	"github.com/andrvv/gapcast/libs/RadarRSSI/libs"
 	"errors"
 )
 

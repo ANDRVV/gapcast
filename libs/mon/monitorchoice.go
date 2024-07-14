@@ -2,9 +2,9 @@ package mon
 
 import (
 	"fmt"
-	chipset "gapcast/libs/mon/chipset"
 	"os/exec"
 	"strings"
+	chipset "github.com/andrvv/gapcast/libs/mon/chipset"
 )
 
 type mode int
