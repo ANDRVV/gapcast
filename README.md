@@ -14,7 +14,7 @@
 
 [![Go](https://github.com/ANDRVV/gapcast/actions/workflows/go.yml/badge.svg)](https://github.com/ANDRVV/gapcast/actions/workflows/go.yml) [![CodeQL](https://github.com/ANDRVV/gapcast/actions/workflows/codeql.yml/badge.svg)](https://github.com/ANDRVV/gapcast/actions/workflows/codeql.yml) 
 
-[![Codacy Security Scan](https://github.com/ANDRVV/gapcast/actions/workflows/codacy.yml/badge.svg)](https://github.com/ANDRVV/gapcast/actions/workflows/codacy.yml)
+[![Codacy Security Scan](https://github.com/ANDRVV/gapcast/actions/workflows/codacy.yml/badge.svg)](https://github.com/ANDRVV/gapcast/actions/workflows/codacy.yml) [![GitHub Releases Stats](https://img.shields.io/github/downloads/ANDRVV/gapcast/total.svg?logo=github)](https://somsubhra.github.io/github-release-stats/?username=ANDRVV&repository=gapcast)
 </div>
 
 <h1 align="center">How to install & run Gapcast</h1>
