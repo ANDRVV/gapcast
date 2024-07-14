@@ -2,7 +2,7 @@ package mon
 
 import (
 	"fmt"
-	chipset "gapcast/libs/mon/chipset"
+	chipset "github.com/andrvv/gapcast/libs/mon/chipset"
 	"os/exec"
 	"strings"
 )
