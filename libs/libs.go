@@ -2,10 +2,10 @@ package libs
 
 import (
 	"fmt"
-	"github.com/andrvv/gapcast/libs/RadarRSSI"
-	"github.com/andrvv/gapcast/libs/RadarRSSI/libs"
-	"github.com/andrvv/gapcast/libs/jsonreader"
-	"github.com/andrvv/gapcast/libs/mon"
+	"gapcast/libs/RadarRSSI"
+	"gapcast/libs/RadarRSSI/libs"
+	"gapcast/libs/jsonreader"
+	"gapcast/libs/mon"
 	color2 "github.com/fatih/color"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
