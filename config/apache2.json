@@ -1,0 +1,4 @@
+{
+    "Info-Grabbed": "/var/www/html/infograbbed.txt",
+    "LOG-File": "/var/log/apache2/access.log"
+}
