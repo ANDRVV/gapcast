@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/andrvv/gapcast/libs"
-	"github.com/andrvv/gapcast/libs/injpacket"
-	"github.com/andrvv/gapcast/libs/jsonreader"
+	"gapcast/libs"
+	"gapcast/libs/injpacket"
+	"gapcast/libs/jsonreader"
 	bettercap "github.com/bettercap/bettercap/packets"
 	"github.com/eiannone/keyboard"
 	colo "github.com/fatih/color"
