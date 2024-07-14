@@ -2,7 +2,7 @@ package injpacket
 
 import (
 	"encoding/hex"
-	radar "gapcast/libs/RadarRSSI/libs"
+	radar "github.com/andrvv/gapcast/libs/RadarRSSI/libs"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"strings"
