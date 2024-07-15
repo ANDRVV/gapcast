@@ -1450,7 +1450,7 @@ func deepScanning(channelList []int, bssid string) {
 						}
 					}
 				}
-				if int64(time.Since(scantime).Seconds()) > 10 {
+				if int64(time.Since(scantime).Seconds()) > 20 {
 					if info.SendedPKT > 0 {
 						break
 					} else {
