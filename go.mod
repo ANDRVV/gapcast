@@ -1,4 +1,4 @@
-module github.com/andrvv/gapcast
+module github.com/andrvv/gapcast/v1.0.3-beta
 
 go 1.21.1
 
