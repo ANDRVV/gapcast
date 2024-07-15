@@ -47,7 +47,7 @@ var (
 )
 
 const (
-	VERSION string = "1.0.3.beta"
+	VERSION string = "1.0.3-beta"
 )
 
 // Clear terminal display
