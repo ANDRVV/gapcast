@@ -1799,23 +1799,23 @@ func main() {
 	if runtime.GOOS != "linux" {
 		fmt.Println("Invalid operative system: needed GNU/Linux")
 		os.Exit(1)
-	}
-	prefix, channelList, pcapWriteFile, fileLoader, scanAfterLoad, scBSSID := collect()
-	fmt.Println("DDD")
-	if scBSSID != "?" {
-		rssiRadar = true
-		setup("?", false, "")
-		deepScanning(channelList, scBSSID)
-	} else if fileLoader == "?" {
-		setup(pcapWriteFile, false, "")
-		engine(channelList, prefix)
-	} else if libs.ReaderCheck(fileLoader) {
-		if scanAfterLoad {
-			setup(pcapWriteFile, true, fileLoader)
+	} else {
+		prefix, channelList, pcapWriteFile, fileLoader, scanAfterLoad, scBSSID := collect()
+		if scBSSID != "?" {
+			rssiRadar = true
+			setup("?", false, "")
+			deepScanning(channelList, scBSSID)
+		} else if fileLoader == "?" {
+			setup(pcapWriteFile, false, "")
 			engine(channelList, prefix)
-		} else {
-			loaderSetupView(fileLoader)
-			printChart(true)
+		} else if libs.ReaderCheck(fileLoader) {
+			if scanAfterLoad {
+				setup(pcapWriteFile, true, fileLoader)
+				engine(channelList, prefix)
+			} else {
+				loaderSetupView(fileLoader)
+				printChart(true)
+			}
 		}
 	}
 }
