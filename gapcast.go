@@ -151,7 +151,8 @@ func collect() (prefix string, channelList []int, pcapWriteFile string, fileLoad
 				os.Exit(1)
 			}
 		case *nmrestart:
-			if _, err := libs.Rtexec(exec.Command("bash", "-c", "killall dnsmasq hostapd && iptables --flush && iptables -t nat --flush && service networking restart && service NetworkManager restart && service apache2 stop")); err {
+                        libs.Rtexec(exec.Command("bash", "-c", "killall dnsmasq hostapd"))
+			if _, err := libs.Rtexec(exec.Command("bash", "-c", "iptables --flush && iptables -t nat --flush && service networking restart && service NetworkManager restart && service apache2 stop")); err {
 				fmt.Println("Unable to restart Network Manager.")
 				os.Exit(1)
 			}
