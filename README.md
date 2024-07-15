@@ -8,7 +8,7 @@
 [Ask me](mailto:vaccaro.andrea45@gmail.com) | [Wiki](https://github.com/ANDRVV/gapcast/wiki) | [Features](https://github.com/ANDRVV/gapcast#features)
 
 <p align="center"><strong>Gapcast</strong> is an IEEE 802.11 packet injection and analyzer software 📡</p>
-<p align="center">Use it with <a href="https://github.com/ANDRVV/gapcast/wiki#-radar">RadarRSSI</a>!</p>
+<p align="center">Use it with <a href="https://github.com/ANDRVV/gapcast/wiki#-radar">-radar</a>!</p>
 
 <div align="center" style="display:grid;place-items:center;">
 
