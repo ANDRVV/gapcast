@@ -94,6 +94,7 @@ var (
 	tableinj         libs.INJTable
 )
 
+// Collect all flags
 func collect() (prefix string, channelList []int, pcapWriteFile string, fileLoader string, scanAfterLoad bool, scBSSID string) {
 	var ch *string = flag.String("c", "-1", "")
 	var load *string = flag.String("l", "?", "")
@@ -274,6 +275,7 @@ func collect() (prefix string, channelList []int, pcapWriteFile string, fileLoad
 	return strings.ToLower(*prfix), channelList, *write, *load, scanAfterLoad, *sc
 }
 
+// Exit safely from gapcast
 func signalExit() {
 	if ETLogRead {
 		for !eviltwinQuit {
@@ -305,6 +307,7 @@ func signalExit() {
 	}
 }
 
+// Start recorder for CTRL-C -> exit
 func startSignal() {
 	var regKey *hotkey.Hotkey = hotkey.New([]hotkey.Modifier{hotkey.ModCtrl}, hotkey.KeyC)
 	regKey.Register()
@@ -331,6 +334,7 @@ func startSignal() {
 	}
 }
 
+// Setup analyzer table chart
 func setupChart() {
 	if rssiRadar {
 		chartBSSID = table.New("BSSID", "ENC", "PWR", "BEACONS", "DATA", "CH", "ESSID", "MANUFACTURER", "RAY")
@@ -348,6 +352,7 @@ func setupChart() {
 	analysisData.ClientData = make(map[string]libs.DeviceClient)
 }
 
+// Preliminaries (interface management, checks, config reader...)
 func setup(file string, load bool, pcapfile string) {
 	go startSignal()
 	if libs.WriterCheck(file) {
@@ -465,6 +470,7 @@ func setup(file string, load bool, pcapfile string) {
 	time.Sleep(1 * time.Second)
 }
 
+// Change interface channel automatically
 func channelChanger(channelList []int) {
 	var changeCh func([]int, string) = func(channelList []int, nameiface string) {
 		if singleChannel {
@@ -498,6 +504,7 @@ func channelChanger(channelList []int) {
 	}
 }
 
+// Update analyzer table
 func update() {
 	var refreshTime time.Time = time.Now()
 	if elapsedTime == (time.Time{}) {
@@ -519,6 +526,7 @@ func update() {
 	}
 }
 
+// Detect EAPOL Key and rec it (optional: write on pcap file)
 func recEapol(packet gopacket.Packet) {
 	if packet.Layer(layers.LayerTypeDot11) != nil {
 		if exist, _, apmac, stamac := bettercap.Dot11ParseEAPOL(packet, packet.Layer(layers.LayerTypeDot11).(*layers.Dot11)); exist {
@@ -534,6 +542,7 @@ func recEapol(packet gopacket.Packet) {
 	}
 }
 
+// Write packet on pcap file
 func writeToPcap(packet gopacket.Packet) {
 	if enabledWriter && !panicExit {
 		writing = true
@@ -546,6 +555,7 @@ func writeToPcap(packet gopacket.Packet) {
 	}
 }
 
+// Analyze packet and extract info
 func handlePacket(handle *pcap.Handle, chans []int, prefix string, filter bool, offload bool) {
 	var packets *gopacket.PacketSource = gopacket.NewPacketSource(handle, handle.LinkType())
 	defer handle.Close()
@@ -646,6 +656,7 @@ func handlePacket(handle *pcap.Handle, chans []int, prefix string, filter bool, 
 	}
 }
 
+// Reset view of inactive device on analyzer table (restoring of all info) 
 func resetPreActive() {
 	mutex.Lock()
 	for mac := range analysisData.ClientData {
@@ -657,6 +668,7 @@ func resetPreActive() {
 	mutex.Unlock()
 }
 
+// Move active device to inactive device (when gapcast does not found more info of it from 30s)
 func moveActiveToInactive() {
 	for {
 		time.Sleep(100 * time.Millisecond)
@@ -689,6 +701,7 @@ func moveActiveToInactive() {
 	}
 }
 
+// Get AP channel from analysis data
 func getChFromSaved(mac string) int {
 	mac = strings.ToUpper(libs.Fmac(mac))
 	if data, exist := analysisData.DeviceData[mac]; exist {
@@ -699,6 +712,7 @@ func getChFromSaved(mac string) int {
 	return -1
 }
 
+// Sort AP's MAC Addresses from associated channel
 func sortForChannel(macs []string) []string {
 	for i := 0; i < len(macs)-1; i++ {
 		for j := 0; j < len(macs)-i-1; j++ {
@@ -710,6 +724,7 @@ func sortForChannel(macs []string) []string {
 	return macs
 }
 
+// Get all STAs from BSSIDs
 func getStationsFromBSSIDs(BSSIDs []string) []string {
 	var stations []string
 	if len(BSSIDs) < 1 {
@@ -723,6 +738,7 @@ func getStationsFromBSSIDs(BSSIDs []string) []string {
 	return stations
 }
 
+// With INJ info & selection inject independetly packets
 func inject(nameiface string) {
 	var injtype, injessid string = tableinj.INJ, tableinj.ESSID
 	var sMac, sdtype, injsrc, injdst string
@@ -847,6 +863,7 @@ func inject(nameiface string) {
 	}
 }
 
+// Start recording of CTRL-D for starting injection
 func regD(nameiface string) {
 	if !alreadyDKeyReg {
 		regDKey = hotkey.New([]hotkey.Modifier{hotkey.ModCtrl}, hotkey.KeyD)
@@ -880,6 +897,7 @@ func regD(nameiface string) {
 	}
 }
 
+// Selection of INJ attack from INJ Table
 func regXINJ(nameiface string, ChannelList []int) {
 	event, _ := keyboard.GetKeys(10)
 	for {
@@ -930,6 +948,7 @@ func regXINJ(nameiface string, ChannelList []int) {
 	}
 }
 
+// Selection of ESSID from INJ Table
 func regESSID(nameiface string) {
 	event, _ := keyboard.GetKeys(10)
 	for {
@@ -976,6 +995,7 @@ func regESSID(nameiface string) {
 	}
 }
 
+// Selection of channel from INJ Table
 func regCh(nameiface string, ChannelList []int) {
 	event, _ := keyboard.GetKeys(10)
 	for {
@@ -1018,6 +1038,7 @@ func regCh(nameiface string, ChannelList []int) {
 	}
 }
 
+// Selection of numeric sequence from INJ Table
 func reg1234(nameiface string, ChannelList []int) {
 	event, _ := keyboard.GetKeys(10)
 	for {
@@ -1129,6 +1150,7 @@ func reg1234(nameiface string, ChannelList []int) {
 	}
 }
 
+// Selection of MAC Address/hex characters from INJ Table
 func regWM(way string, nameiface string, ChannelList []int) {
 	event, _ := keyboard.GetKeys(10)
 	for openTable {
@@ -1221,6 +1243,7 @@ func regWM(way string, nameiface string, ChannelList []int) {
 	}
 }
 
+/* Analyzer worker, it run channel switcher, packet handler, management of table, INJ table hotkey recorder (CTRL-T), pause func hotkey recorder (CTRL-E) */
 func engine(channelList []int, prefix string) {
 	channelChanger(channelList)
 	go func() {
@@ -1289,6 +1312,7 @@ func engine(channelList []int, prefix string) {
 	update()
 }
 
+// Sort info and print completed table
 func printChart(offline bool) {
 	var deviceDataSort []string
 	var clientDataSort []string
@@ -1347,6 +1371,7 @@ func printChart(offline bool) {
 	}
 }
 
+// Preliminaries (same setup()) for ONLY pcap file reading 
 func loaderSetupView(file string) {
 	color = libs.SetupColors()
 	libs.PrintLogo(color, "Initializing...")
@@ -1378,6 +1403,7 @@ func loaderSetupView(file string) {
 	time.Sleep(1 * time.Second)
 }
 
+// deepScanning function that scan single target and get info
 func deepScanning(channelList []int, bssid string) {
 	var stage int = 1
 	var deviceDBM int
@@ -1516,6 +1542,7 @@ func deepScanning(channelList []int, bssid string) {
 	fmt.Printf("\n%s   %s\n\n", color.White, strings.Repeat("=", 25))
 }
 
+// Run Evil Twin attack with captive portal function
 func runEvilTwin(nameiface string) {
 	var nodeauthStarting bool = false
 	var handle2 *pcap.Handle
