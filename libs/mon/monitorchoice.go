@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
-	chipset "github.com/andrvv/gapcast/libs/mon/chipset"
+	chipset "github.com/andrvv/gapcast/v1.0.3-beta/libs/mon/chipset"
 )
 
 type mode int
