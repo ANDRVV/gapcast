@@ -28,8 +28,8 @@ var (
 		/* Band group 1 */ 1, 6, 11,
 		/* Band group 2 */ 2, 7, 12,
 		/* Band group 3 */ 3, 8, 13,
-		4, 9, 14,
-		5, 10,
+		/*              */ 4, 9, 14,
+		*               */ 5, 10,
 	}
 	G5channels []int = []int{ // in descending order by coverage signal (20, 40, 80, 160 MHz)
 		/* 160 MHz coverage */ 50, 114, 163,
