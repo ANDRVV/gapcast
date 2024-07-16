@@ -170,5 +170,6 @@ Click for about of [Single Deep Scanning](https://github.com/ANDRVV/gapcast/wiki
 <h1 align="center">Future features</h1>
 <ul>
 <li>New attack from INJ Table</li>
-<li>Evil Twin attack (soon)</li>
+<li>Documentation for Evil Twin attack</li>
+<li>Web-page models for Evil Twin captive portal</li>
 </ul>
