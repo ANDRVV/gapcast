@@ -580,30 +580,20 @@ func handlePacket(handle *pcap.Handle, chans []int, prefix string, filter bool, 
 			if packet.ErrorLayer() == nil && packet != nil && packet.Layer(layers.LayerTypeDot11) != nil {
 				if PWR, err := libs.GetDBM(packet); !err {
 					if libs.IsBeacon(packet) {
-						if SRC, err1 := libs.GetSRCBeacon(packet); !err1 {
-							if filter && ((macFilter != "" && !strings.EqualFold(macFilter, SRC)) || (prefix != "?" && !strings.HasPrefix(strings.ToLower(SRC), strings.ToLower(prefix)))) {
-								return
-							}
+						if SRC, err1 := libs.GetSRCBeacon(packet); !err1 && (!filter || ((macFilter == "" || strings.EqualFold(macFilter, SRC)) && (prefix == "?" || strings.HasPrefix(strings.ToLower(SRC), strings.ToLower(prefix))))) {
 							exist1, ENC := libs.GetEncString(bettercap.Dot11ParseEncryption(packet, packet.Layer(layers.LayerTypeDot11).(*layers.Dot11)))
 							if (enc != "?" && !strings.Contains(ENC, enc)) || (cipher != "?" && !strings.Contains(ENC, cipher)) || (auth != "?" && !strings.Contains(ENC, auth)) {
 								return
 							}
 							exist2, Channel := bettercap.Dot11ParseDSSet(packet)
-							if exist2 && Channel > 0 && slices.Contains(chans, Channel) {
-								if filter && singleChannel && Channel != globalChannel {
-									return
-								}
+							if exist2 && Channel > 0 && slices.Contains(chans, Channel) && (!filter || !singleChannel || Channel == globalChannel) {
 								var oldBeacon, oldData int = 0, 0
-								var MANUFTR string
-								exist, ESSID := bettercap.Dot11ParseIDSSID(packet)
-								if !exist || !libs.IsValidESSID(ESSID) {
-									ESSID = "<?>"
-								}
+								var ESSID, MANUFTR string = libs.GetESSID(packet), ""
 								mutex.Lock()
 								if _, exist3 := analysisData.DeviceData[SRC]; exist3 {
 									oldBeacon = analysisData.DeviceData[SRC].Beacons
 									oldData = analysisData.DeviceData[SRC].Data
-									if (!libs.IsValidESSID(ESSID) || ESSID == "<?>") && analysisData.DeviceData[SRC].Essid != ESSID {
+									if ESSID == "<unavailable>" && analysisData.DeviceData[SRC].Essid != ESSID {
 										ESSID = analysisData.DeviceData[SRC].Essid
 									}
 									if !exist1 {
@@ -623,11 +613,9 @@ func handlePacket(handle *pcap.Handle, chans []int, prefix string, filter bool, 
 								mutex.Unlock()
 							}
 						}
-					} else if BSSID_CLIENT, MAC, err := libs.GetAPSTAData(packet); bettercap.Dot11IsDataFor(packet.Layer(layers.LayerTypeDot11).(*layers.Dot11), libs.ParseMac(MAC)) && !err {
-						if filter {
-							if strings.EqualFold(BSSID_CLIENT, MAC) || strings.EqualFold(MAC, "ff:ff:ff:ff:ff:ff") || (macFilter != "" && !strings.EqualFold(macFilter, BSSID_CLIENT)) {
-								return
-							}
+					} else if BSSID_CLIENT, MAC, err := libs.GetAPSTAData(packet); libs.IsData(packet) && !err {
+						if filter && (strings.EqualFold(BSSID_CLIENT, MAC) || strings.EqualFold(MAC, "ff:ff:ff:ff:ff:ff") || (macFilter != "" && !strings.EqualFold(macFilter, BSSID_CLIENT))) {
+							return
 						}
 						mutex.Lock()
 						if _, exist1 := analysisData.DeviceData[BSSID_CLIENT]; exist1 {
