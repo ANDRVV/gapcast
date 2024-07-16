@@ -1,4 +1,4 @@
-<meta name="description" content="Gapcast is an IEEE 802.11 packet injection and analyzer software. The purpose of gapcast is to accurately detect each router's clients, analyze, capture and inject packets. Gapcast adds more and more parameters for filters and functionality during releases. Gapcast therefore requires good documentation to use the software to its fullest.">
+<meta name="description" content="Gapcast is an IEEE 802.11 packet injector, analyzer, evil twin software. The purpose of gapcast is to accurately detect each router's clients, analyze, capture and inject packets. Gapcast adds more and more parameters for filters and functionality during releases. Gapcast therefore requires good documentation to use the software to its fullest. Keys: Evil-Twin evil twin ieee 802.11 .11 dot11 wifi wifi-security injection inject suite hostapd dnsmasq hotspot access point station">
 
 <div align="center" style="display:grid;place-items:center;">
 <p>
