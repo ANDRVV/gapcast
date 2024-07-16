@@ -32,7 +32,7 @@ go build -buildvcs=false
 
 <h1 align="center">💉Injection Table</h1>
 
-<a align="right" href="https://github.com/ANDRVV/gapcast/wiki/Injection-Table"><img src="https://github.com/ANDRVV/gapcast/blob/main/images/injtype-selection.png?raw=true" alt="Table Injection Example" align="right" width="475"></a>
+<a align="right" href="https://github.com/ANDRVV/gapcast/wiki/Injection-Table"><img src="https://github.com/ANDRVV/gapcast/blob/main/images/injtype-selection.png?raw=true" alt="Table Injection Example" align="right" width="450"></a>
 <p align="left">The Injection table is a table where you can insert data and perform an attack or injection.</p>
 
 <p>Advantages:</p>
