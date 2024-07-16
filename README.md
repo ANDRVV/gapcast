@@ -3,7 +3,7 @@
 <div align="center" style="display:grid;place-items:center;">
 <p>
     <img src="https://github.com/ANDRVV/gapcast/blob/main/images/gapcast-t.png?raw=true" alt="Gapcast logo">
-    <h3><a href="mailto:vaccaro.andrea45@gmail.com">Ask me</a> | <a href="https://github.com/ANDRVV/gapcast/wiki">Wiki</a> | <a href="https://github.com/ANDRVV/gapcast#features">Upcoming</a></h3>
+    <h3><a href="mailto:vaccaro.andrea45@gmail.com">Ask me</a> | <a href="https://github.com/ANDRVV/gapcast/wiki">Wiki</a> | <a href="https://github.com/ANDRVV/gapcast#Upcoming-features">Upcoming</a></h3>
 </p>
 
 <p align="center">An IEEE 802.11 packet injector and analyzer software📡</p>
@@ -17,7 +17,7 @@
 </div>
 
 <h1 align="center">How to install & run Gapcast</h1>
-
+<p>:bangbang:Check <a href="https://github.com/ANDRVV/gapcast#Dependencies">dependencies</a>:bangbang:</p>
 <p align="center">🔧For <strong>GNU/Linux</strong>:</p>
 </div>
 
@@ -166,7 +166,12 @@ go build -buildvcs=false
 
 <p align="center">💻Happy hacking!😊</p>
 
-<h1 align="center">Future features</h1>
+<h1 align="center">📚Dependencies</h1>
+
+> [!CAUTION]
+> You must install ```apache2```, ```iptables```, ```hostapd```, ```dnsmasq```, ```aircrack-ng```, ```php```, if you'd use ***gapcast***!
+
+<h1 align="center">🚀Upcoming features</h1>
 <ul>
 <li>New attack from INJ Table</li>
 <li>Documentation for Evil Twin attack</li>
