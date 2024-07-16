@@ -157,7 +157,6 @@ func ShowIfaces() (ifaces []Ifaces) {
 
 // Set managed mode on interface
 func SetManagedMode(nameiface string) {
-
 	if err := mon.SetMode(nameiface, mon.MANAGED); err {
 		for _, iface := range ShowIfaces() {
 			if strings.Contains(iface.Name, nameiface) { // run this code if iface is potentially managed by airmon-ng
@@ -172,7 +171,6 @@ func SetManagedMode(nameiface string) {
 
 // Set monitor mode on interface
 func SetMonitorMode(nameiface string) (err bool) {
-
 	Rtexec(exec.Command("bash", "-c", "airmon-ng check kill"))
 	if err := mon.SetMode(nameiface, mon.MONITOR); err {
 		return true
@@ -191,7 +189,6 @@ func SetMonitorMode(nameiface string) (err bool) {
 		}
 	}
 	return err
-
 }
 
 // Execute commands on OS shell
@@ -392,6 +389,22 @@ func GetMonitorSniffer(nameiface string, color Colors) (handle *pcap.Handle) {
 	return nil
 }
 
+// Get ESSID from beacon sublayers
+func GetESSID(packet gopacket.Packet) (ESSID string) {
+	for _, layer := range packet.Layers() { // if this func runned packet layer HAS beacon
+		if layer.LayerType() == layers.LayerTypeDot11InformationElement {
+			if dot11info, exist := layer.(*layers.Dot11InformationElement); exist && dot11info.ID == layers.Dot11InformationElementIDSSID {	
+				if len(dot11info.Info) == 0 {
+					return "<hidden>"
+				} else if IsValidESSID(ESSID) {
+					return string(dot11info.Info)
+				}
+			}
+		}
+	}
+	return "<unavailable>"
+}
+
 // Get RSSI from packet
 func GetDBM(packet gopacket.Packet) (dBm int8, err bool) {
 	if PWR, ok := packet.Layer(layers.LayerTypeRadioTap).(*layers.RadioTap); PWR != nil && ok {
@@ -400,6 +413,7 @@ func GetDBM(packet gopacket.Packet) (dBm int8, err bool) {
 	return 0, true
 }
 
+// Get source address from beacon
 func GetSRCBeacon(packet gopacket.Packet) (src string, err bool) {
 	if dot11 := packet.Layer(layers.LayerTypeDot11).(*layers.Dot11); dot11 != nil {
 		if SRC := dot11.Address2.String(); IsValidMAC(SRC) {
