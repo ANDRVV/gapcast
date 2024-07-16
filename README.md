@@ -6,7 +6,7 @@
     <h3><a href="mailto:vaccaro.andrea45@gmail.com">Ask me</a> | <a href="https://github.com/ANDRVV/gapcast/wiki">Wiki</a> | <a href="https://github.com/ANDRVV/gapcast#features">Features</a></h3>
 </p>
 
-<p align="center"><strong>Gapcast</strong>, an IEEE 802.11 packet injector and analyzer software 📡</p>
+<p align="center">An IEEE 802.11 packet injector and analyzer software📡</p>
 <p align="center">Use it with <a href="https://github.com/ANDRVV/gapcast/wiki#-radar">-radar</a>!</p>
 
 <div align="center" style="display:grid;place-items:center;">
@@ -32,7 +32,7 @@ go build -buildvcs=false
 
 <h1 align="center">💉Injection Table</h1>
 
-<a align="right" href="https://github.com/ANDRVV/gapcast/wiki/Injection-Table"><img src="https://github.com/ANDRVV/gapcast/blob/main/images/injtype-selection.png?raw=true" alt="Table Injection Example" align="right" width="375"></a>
+<a align="right" href="https://github.com/ANDRVV/gapcast/wiki/Injection-Table"><img src="https://github.com/ANDRVV/gapcast/blob/main/images/injtype-selection.png?raw=true" alt="Table Injection Example" align="right" width="475"></a>
 <p align="left">The Injection table is a table where you can insert data and perform an attack or injection.</p>
 
 <p>Advantages:</p>
@@ -43,10 +43,23 @@ go build -buildvcs=false
     <li>Quick and easy attack initialization.</li>
     <li>Interface with attack information.</li>
 </ul>
-
+<br>
+<br>
+<br>
+<br>
 <p>For more info <a href="https://github.com/ANDRVV/gapcast/wiki/Injection-Table">click here</a>.</p>
 
+<h1 align="center">🕵️‍♂️Deep Scanning</h1>
+
+<a align="right" href="https://github.com/ANDRVV/gapcast/wiki/Single-deep-scanning"><img src="https://github.com/ANDRVV/gapcast/raw/main/images/wiki/structure/scfull.png?raw=true" alt="Single deep scanning Example" align="right" width="450"></a>
+<p align="left">The Single Deep Scanning feature focuses on a single target, splitting the scan into three phases. By using the BSSID alone, you can obtain a wide range of information.</p>
+<p><strong>Step 1</strong>: detect the channel of the AP or STA.</p>
+<p><strong>Step 2</strong>: collects the packets that are exchanged.</p>
+<p><strong>Step 3</strong>: arrange the data and calculate the distance based on different antennas.</p>
 <br>
+<br>
+<br>
+<p>For more info <a href="https://github.com/ANDRVV/gapcast/wiki/Single-deep-scanning">click here</a>.</p>
 
 <h1 align="center">📈Parameter techniques</h1>
 <h3>Usage</h3>
@@ -150,9 +163,9 @@ Click for about of [Single Deep Scanning](https://github.com/ANDRVV/gapcast/wiki
 > 
 > If you want to show or record only the *Access Points* you must enter the ```-beacon``` parameter. For this technique, where we show all *Access Points* of all channels it is necessary to add the parameter ```-2.4+5g```.
 
-<p align="center">Obviously there are many other techniques, happy hacking!</p>
+<p align="center">💻Happy hacking!😊</p>
 
-<h1 align="center">Monitor mode handler</h1>
+<h1 align="center">📶Monitor mode handler</h1>
 
 <p>For each driver there is a correct <strong>sequence of commands to start the network card correctly in monitor mode</strong>. <strong>Drivers supported by gapcast can also have a txpower modification, bug fixing etc</strong>, as in the case of the RTL8812AU chipset which can be increased to a txpower of 30 dBm. If the driver is not supported, it will start monitor mode directly with airmon-ng.</p>
 <p>Supported drivers:</p>
