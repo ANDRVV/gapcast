@@ -2,19 +2,24 @@ package libs
 
 import (
 	"fmt"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
 	"os"
 	"os/exec"
 	"os/user"
 	"regexp"
 	"strconv"
 	"strings"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 )
 
 // Check if the main layer is a beacon
 func IsBeacon(packet gopacket.Packet) (isBeacon bool) {
 	return packet.Layer(layers.LayerTypeDot11).(*layers.Dot11).Type == layers.Dot11TypeMgmtBeacon
+}
+
+// Check if the main layer is data
+func IsData(packet gopacket.Packet) (isData bool) {
+	return packet.Layer(layers.LayerTypeDot11).(*layers.Dot11).Type.MainType() == layers.Dot11TypeData
 }
 
 // Check if ESSID is valid according to https://www.cisco.com/assets/sol/sb/WAP321_Emulators/WAP321_Emulator_v1.0.0.3/help/Wireless05.html
