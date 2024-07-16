@@ -3,11 +3,10 @@
 <div align="center" style="display:grid;place-items:center;">
 <p>
     <img src="https://github.com/ANDRVV/gapcast/blob/main/images/gapcast-t.png?raw=true" alt="Gapcast logo">
+    <h3><a href="mailto:vaccaro.andrea45@gmail.com">Ask me</a> | <a href="https://github.com/ANDRVV/gapcast/wiki">Wiki</a> | <a href="https://github.com/ANDRVV/gapcast#features">Features</a></h3>
 </p>
-    
-[Ask me](mailto:vaccaro.andrea45@gmail.com) | [Wiki](https://github.com/ANDRVV/gapcast/wiki) | [Features](https://github.com/ANDRVV/gapcast#features)
 
-<p align="center"><strong>Gapcast</strong> is an IEEE 802.11 packet injection and analyzer software 📡</p>
+<p align="center"><strong>Gapcast</strong>, an IEEE 802.11 packet injector and analyzer software 📡</p>
 <p align="center">Use it with <a href="https://github.com/ANDRVV/gapcast/wiki#-radar">-radar</a>!</p>
 
 <div align="center" style="display:grid;place-items:center;">
@@ -19,7 +18,7 @@
 
 <h1 align="center">How to install & run Gapcast</h1>
 
-<p align="center">For <strong>GNU/Linux</strong>:</p>
+<p align="center">🔧For <strong>GNU/Linux</strong>:</p>
 </div>
 
 ```bash
@@ -31,10 +30,10 @@ go build -buildvcs=false
 
 ![](https://github.com/ANDRVV/gapcast/blob/main/images/gapcast-scan.png?raw=true)
 
-<h1 align="center">Injection Table</h1>
+<h1 align="center">💉Injection Table</h1>
 
 <a align="right" href="https://github.com/ANDRVV/gapcast/wiki/Injection-Table"><img src="https://github.com/ANDRVV/gapcast/blob/main/images/injtype-selection.png?raw=true" alt="Table Injection Example" align="right" width="375"></a>
-<p align="left">The Injection table is a table where you can insert data and perform an injection.</p>
+<p align="left">The Injection table is a table where you can insert data and perform an attack or injection.</p>
 
 <p>Advantages:</p>
 <ul>
@@ -49,7 +48,7 @@ go build -buildvcs=false
 
 <br>
 
-<h1 align="center">Parameter techniques</h1>
+<h1 align="center">📈Parameter techniques</h1>
 <h3>Usage</h3>
 
 <p>Check out the <a href="https://github.com/ANDRVV/gapcast/wiki">wiki</a>!</p>
