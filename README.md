@@ -17,7 +17,7 @@
 </div>
 
 <h1 align="center">How to install & run Gapcast</h1>
-<p>:bangbang:Check <a href="https://github.com/ANDRVV/gapcast#Dependencies">dependencies</a>:bangbang:</p>
+<p><strong>:bangbang:Check <a href="https://github.com/ANDRVV/gapcast#Dependencies">dependencies</a>:bangbang:</strong></p>
 <p align="center">🔧For <strong>GNU/Linux</strong>:</p>
 </div>
 
