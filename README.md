@@ -3,7 +3,7 @@
 <div align="center" style="display:grid;place-items:center;">
 <p>
     <img src="https://github.com/ANDRVV/gapcast/blob/main/images/gapcast-t.png?raw=true" alt="Gapcast logo">
-    <h3><a href="mailto:vaccaro.andrea45@gmail.com">Ask me</a> | <a href="https://github.com/ANDRVV/gapcast/wiki">Wiki</a> | <a href="https://github.com/ANDRVV/gapcast#features">Features</a></h3>
+    <h3><a href="mailto:vaccaro.andrea45@gmail.com">Ask me</a> | <a href="https://github.com/ANDRVV/gapcast/wiki">Wiki</a> | <a href="https://github.com/ANDRVV/gapcast#features">Upcoming</a></h3>
 </p>
 
 <p align="center">An IEEE 802.11 packet injector and analyzer software📡</p>
@@ -58,24 +58,25 @@ go build -buildvcs=false
 <p><strong>Step 3</strong>: arrange the data and calculate the distance based on different antennas.</p>
 <br>
 <br>
-<br>
 <p>For more info <a href="https://github.com/ANDRVV/gapcast/wiki/Single-deep-scanning">click here</a>.</p>
+<p>🚀Soon be updated! It will give more stuff!</p>
+
+<h1 align="center">📶Monitor mode handler</h1>
+
+<p>For each driver there is a correct <strong>sequence of commands to start the network card correctly in monitor mode</strong>. <strong>Drivers supported by gapcast can also have a txpower modification, bug fixing etc</strong>. If the driver is not supported, it will start monitor mode directly with <a href="https://github.com/aircrack-ng/aircrack-ng">airmon-ng</a>.</p>
+<p>Supported drivers:</p>
+<ul>
+    <li><code>RTL88XXAU</code> mon+txpower</li>
+    <li><code>R8187</code> mon+bugfix</li>
+    <li><code>RTL8812CU</code> mon</li>
+    <li><code>RTL8821CU</code> mon</li>
+</ul>
+
+> [!IMPORTANT]
+> 
+> If your driver is not supported or if you would like to boot into monitor mode with your changes, just do so before starting gapcast. **If gapcast recognizes that the interface has already set monitor mode, it will not make any changes or even try to restart monitor mode**.
 
 <h1 align="center">📈Parameter techniques</h1>
-<h3>Usage</h3>
-
-<p>Check out the <a href="https://github.com/ANDRVV/gapcast/wiki">wiki</a>!</p>
-
-<h3>Single Deep Scanning</h3>
-
-Click for about of [Single Deep Scanning](https://github.com/ANDRVV/gapcast/wiki/Single-deep-scanning)!
-
-```bash
-./gapcast -i <iface> -sc 03:e9:58:65:2a:86 -2.4+5g
-```
-> [!Note]
-> 
-> With the `-sc <mac>` parameter scans the target in depth, using this method however discards all the other parameters, except for `-i <iface>` and the band selection such as `-5g` or `-2.4+5g`.
 
 <h3>SCAN-ALL-FOR-LONG-TIME</h3>
 
@@ -164,21 +165,6 @@ Click for about of [Single Deep Scanning](https://github.com/ANDRVV/gapcast/wiki
 > If you want to show or record only the *Access Points* you must enter the ```-beacon``` parameter. For this technique, where we show all *Access Points* of all channels it is necessary to add the parameter ```-2.4+5g```.
 
 <p align="center">💻Happy hacking!😊</p>
-
-<h1 align="center">📶Monitor mode handler</h1>
-
-<p>For each driver there is a correct <strong>sequence of commands to start the network card correctly in monitor mode</strong>. <strong>Drivers supported by gapcast can also have a txpower modification, bug fixing etc</strong>, as in the case of the RTL8812AU chipset which can be increased to a txpower of 30 dBm. If the driver is not supported, it will start monitor mode directly with airmon-ng.</p>
-<p>Supported drivers:</p>
-<ul>
-    <li><code>RTL88XXAU</code> mon+txpower</li>
-    <li><code>R8187</code> mon+bugfix</li>
-    <li><code>RTL8812CU</code> mon</li>
-    <li><code>RTL8821CU</code> mon</li>
-</ul>
-
-> [!IMPORTANT]
-> 
-> If your driver is not supported or if you would like to boot into monitor mode with your changes, just do so before starting gapcast. **If gapcast recognizes that the interface has already set monitor mode, it will not make any changes or even try to restart monitor mode**.
 
 <h1 align="center">Future features</h1>
 <ul>
