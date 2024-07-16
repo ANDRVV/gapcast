@@ -169,7 +169,7 @@ go build -buildvcs=false
 <h1 align="center">📚Dependencies</h1>
 
 > [!CAUTION]
-> You must install ```apache2```, ```iptables```, ```hostapd```, ```dnsmasq```, ```aircrack-ng```, ```php```, if you'd use ***gapcast***!
+> You must install ```apache2```, ```iptables```, ```hostapd```, ```dnsmasq```, ```aircrack-ng```, ```php```, if you'd use **gapcast**!
 
 <h1 align="center">🚀Upcoming features</h1>
 <ul>
