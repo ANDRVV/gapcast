@@ -166,7 +166,6 @@ func SetManagedMode(nameiface string) {
 			}
 		}
 	}
-
 }
 
 // Set monitor mode on interface
@@ -391,7 +390,7 @@ func GetMonitorSniffer(nameiface string, color Colors) (handle *pcap.Handle) {
 
 // Get ESSID from beacon sublayers
 func GetESSID(packet gopacket.Packet) (ESSID string) {
-	for _, layer := range packet.Layers() { // if this func runned packet layer HAS beacon
+	for _, layer := range packet.Layers() {
 		if layer.LayerType() == layers.LayerTypeDot11InformationElement {
 			if dot11info, exist := layer.(*layers.Dot11InformationElement); exist && dot11info.ID == layers.Dot11InformationElementIDSSID {	
 				if len(dot11info.Info) == 0 {
@@ -407,7 +406,7 @@ func GetESSID(packet gopacket.Packet) (ESSID string) {
 
 // Get RSSI from packet
 func GetDBM(packet gopacket.Packet) (dBm int8, err bool) {
-	if PWR, ok := packet.Layer(layers.LayerTypeRadioTap).(*layers.RadioTap); PWR != nil && ok {
+	if PWR, exist := packet.Layer(layers.LayerTypeRadioTap).(*layers.RadioTap); PWR != nil && exist {
 		return PWR.DBMAntennaSignal, false
 	}
 	return 0, true
