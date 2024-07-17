@@ -581,12 +581,12 @@ func handlePacket(handle *pcap.Handle, chans []int, prefix string, filter bool, 
 				if PWR, err := libs.GetDBM(packet); !err {
 					if libs.IsBeacon(packet) {
 						if SRC, err1 := libs.GetSRCBeacon(packet); !err1 && (!filter || ((macFilter == "" || strings.EqualFold(macFilter, SRC)) && (prefix == "?" || strings.HasPrefix(strings.ToLower(SRC), strings.ToLower(prefix))))) {
-							exist1, ENC := libs.GetEncString(bettercap.Dot11ParseEncryption(packet, packet.Layer(layers.LayerTypeDot11).(*layers.Dot11)))
+							var ENC string = libs.GetENCSuite(packet)
 							if (enc != "?" && !strings.Contains(ENC, enc)) || (cipher != "?" && !strings.Contains(ENC, cipher)) || (auth != "?" && !strings.Contains(ENC, auth)) {
 								return
 							}
-							exist2, Channel := bettercap.Dot11ParseDSSet(packet)
-							if exist2 && Channel > 0 && slices.Contains(chans, Channel) && (!filter || !singleChannel || Channel == globalChannel) {
+							var Channel int = libs.GetAPChannel(packet)
+							if Channel > 0 && slices.Contains(chans, Channel) && (!filter || !singleChannel || Channel == globalChannel) {
 								var oldBeacon, oldData int = 0, 0
 								var ESSID, MANUFTR string = libs.GetESSID(packet), ""
 								mutex.Lock()
@@ -595,9 +595,6 @@ func handlePacket(handle *pcap.Handle, chans []int, prefix string, filter bool, 
 									oldData = analysisData.DeviceData[SRC].Data
 									if ESSID == "<unavailable>" && analysisData.DeviceData[SRC].Essid != ESSID {
 										ESSID = analysisData.DeviceData[SRC].Essid
-									}
-									if !exist1 {
-										ENC = analysisData.DeviceData[SRC].Enc
 									}
 									MANUFTR = analysisData.DeviceData[SRC].Manufacturer
 								} else {
