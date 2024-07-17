@@ -6,7 +6,6 @@ import (
 	"github.com/andrvv/gapcast/v1.0.3-beta/libs"
 	"github.com/andrvv/gapcast/v1.0.3-beta/libs/injpacket"
 	"github.com/andrvv/gapcast/v1.0.3-beta/libs/jsonreader"
-	bettercap "github.com/bettercap/bettercap/packets"
 	"github.com/eiannone/keyboard"
 	colo "github.com/fatih/color"
 	"github.com/google/gopacket"
@@ -528,12 +527,9 @@ func update() {
 
 // Detect EAPOL Key and rec it (optional: write on pcap file)
 func recEapol(packet gopacket.Packet) {
-	if packet.Layer(layers.LayerTypeDot11) != nil {
-		if exist, _, apmac, stamac := bettercap.Dot11ParseEAPOL(packet, packet.Layer(layers.LayerTypeDot11).(*layers.Dot11)); exist {
-			if libs.IsValidMAC(apmac.String()) && libs.IsValidMAC(stamac.String()) && !slices.Contains(capturedEapol, apmac.String()+"<-"+stamac.String()) {
-				capturedEapol = append(capturedEapol, apmac.String()+"<-"+stamac.String())
-			}
-		}
+	ap, sta := libs.GetEAPOL_APSTA(packet) 
+	if libs.IsValidMAC(ap) && libs.IsValidMAC(sta) && !slices.Contains(capturedEapol, fmt.Sprintf("%s<-%s", ap, sta)) {
+		capturedEapol = append(capturedEapol, fmt.Sprintf("%s<-%s", ap, sta))
 	}
 	if packet.Layer(layers.LayerTypeEAPOLKey) != nil {
 		mutex.Lock()
