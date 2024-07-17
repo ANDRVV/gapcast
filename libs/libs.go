@@ -390,6 +390,24 @@ func GetMonitorSniffer(nameiface string, color Colors) (handle *pcap.Handle) {
 	return nil
 }
 
+// Get source and destination from EAPOLKey layer
+func GetEAPOL_APSTA(packet gopacket.Packet) (ap string, sta string) {
+	if dot11Layer := packet.Layer(layers.LayerTypeDot11).(*layers.Dot11); dot11Layer != nil {
+		if eapol := packet.Layer(layers.LayerTypeEAPOLKey); eapol != nil {
+			if key := eapol.(*layers.EAPOLKey); key.KeyType == layers.EAPOLKeyTypePairwise {
+				if dot11Layer.Flags.FromDS() {
+					sta = dot11Layer.Address1.String()
+					ap = dot11Layer.Address2.String()
+				} else if dot11Layer.Flags.ToDS() {
+					sta = dot11Layer.Address2.String()
+					ap = dot11Layer.Address1.String()
+				}
+			}
+		}
+	}
+	return
+}
+
 // Get channel from beacon sublayer (DSSet)
 func GetAPChannel(packet gopacket.Packet) (channel int) {
 	for _, layer := range packet.Layers() {
