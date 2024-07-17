@@ -1,7 +1,18 @@
 package libs
 
 import (
+	"bytes"
+	"encoding/binary"
 	"fmt"
+	"math/rand"
+	"net"
+	"os"
+	"os/exec"
+	"reflect"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
 	"github.com/andrvv/gapcast/v1.0.3-beta/libs/RadarRSSI"
 	"github.com/andrvv/gapcast/v1.0.3-beta/libs/RadarRSSI/libs"
 	"github.com/andrvv/gapcast/v1.0.3-beta/libs/jsonreader"
@@ -12,15 +23,6 @@ import (
 	"github.com/google/gopacket/pcap"
 	"github.com/mattn/go-isatty"
 	"golang.org/x/exp/slices"
-	"math/rand"
-	"net"
-	"os"
-	"os/exec"
-	"reflect"
-	"sort"
-	"strconv"
-	"strings"
-	"time"
 )
 
 var (
@@ -386,6 +388,108 @@ func GetMonitorSniffer(nameiface string, color Colors) (handle *pcap.Handle) {
 	defer os.Exit(1)
 	time.Sleep(800 * time.Millisecond)
 	return nil
+}
+
+// Get channel from beacon sublayer (DSSet)
+func GetAPChannel(packet gopacket.Packet) (channel int) {
+	for _, layer := range packet.Layers() {
+		if info, exist := layer.(*layers.Dot11InformationElement); exist && info.ID == layers.Dot11InformationElementIDDSSet && len(info.Info) > 0 {
+			return int(info.Info[0])
+		}
+	}
+	return -1
+}
+
+// Get encryption suite (security protocol, cipher suite, auth suite) Syntax: <enc [cipher, auth]>
+func GetENCSuite(packet gopacket.Packet) (encSuite string) {
+	var cipher, auth string
+	var cipherID, authID uint8
+	if dot11Layer := packet.Layer(layers.LayerTypeDot11).(*layers.Dot11); dot11Layer != nil {
+		if dot11Layer.Flags.WEP() {
+			return "WEP"
+		} else {
+			for _, layer := range packet.Layers() {
+				if layer.LayerType() == layers.LayerTypeDot11InformationElement {
+					if info, exist := layer.(*layers.Dot11InformationElement); exist {
+						var buf []byte = info.Info
+						if info.ID == layers.Dot11InformationElementIDRSNInfo {
+							encSuite = "WPA2"
+							var rnsCipherCount uint16 = binary.LittleEndian.Uint16(buf[6:8])
+							buf = info.Info[8:] 
+							if len(buf) > int(rnsCipherCount)*4 {
+								buf = buf[rnsCipherCount*4:]
+								cipherID = uint8(buf[3])
+							}
+							if len(buf) > 1 {
+								var rsnAuthCount = binary.LittleEndian.Uint16(buf[0:2])
+								buf = buf[2:]
+								if len(buf) > int(rsnAuthCount)*4 {
+									buf = buf[rsnAuthCount*4:]
+									authID = uint8(buf[3])
+								}
+							}
+							break
+						} else if info.ID == layers.Dot11InformationElementIDVendor && info.Length >= 8 && bytes.Equal(info.OUI, []byte{0, 0x50, 0xf2, 1}) && bytes.HasPrefix(info.Info, []byte{1, 0}) {
+							encSuite = "WPA"
+							var vendorChiperCount uint16 = binary.LittleEndian.Uint16(buf[6:8])
+							buf = buf[8:]
+							if len(buf) > int(vendorChiperCount)*4 {
+								buf = buf[vendorChiperCount*4:]
+								cipherID = uint8(buf[3])
+							}
+							if len(buf) > 1 {
+								var vendorAuthCount = binary.LittleEndian.Uint16(buf[0:2])
+								buf = buf[2:]
+								if len(buf) > int(vendorAuthCount)*4 {
+									buf = buf[vendorAuthCount*4:]
+									authID = uint8(buf[3])
+								}
+							}
+							break
+						}
+					}
+				}
+			}
+		}
+	}
+	if encSuite != "" {
+		switch cipherID {
+		case 1:
+			cipher = "WEP"
+		case 2:
+			cipher = "TKIP"
+		case 3:
+			cipher = "WRAP"
+		case 4:
+			cipher = "CCMP"
+		case 5:
+			cipher = "WEP104"
+		default:
+			cipher = "UNK"
+		}
+		switch authID {
+		case 1:
+			auth = "MGT"
+		case 2:
+			auth = "PSK"
+		default:
+			auth = "UNK"
+		}
+	} else {
+		return "OPEN"
+	}
+	if cipher != "UNK" {
+		encSuite += fmt.Sprintf(" [%s", cipher)
+		if auth != "UNK" {
+			return fmt.Sprintf("%s, %s]", encSuite, auth)
+		} else {
+			return fmt.Sprintf("%s]", encSuite)
+		}
+	}
+	if auth != "UNK" {
+		return fmt.Sprintf("%s [%s]", encSuite, auth)
+	}
+	return encSuite
 }
 
 // Get ESSID from beacon sublayers
@@ -810,30 +914,6 @@ func GetINJTABLERow(color Colors, graph int, tableinj INJTable, src string, dst 
 		rowinj += "   ==================================" + color.Null + color.White + "\n\n"
 	}
 	return rowinj
-}
-
-// Get the cipher and auth suite, if does not get it, network is open
-func GetEncString(existing bool, ENC string, CIPHER string, AUTH string) (exist bool, encInfo string) {
-	if !existing {
-		return false, ""
-	}
-	var CIPAUT []string
-	if ENC != "OPEN" {
-		if !(CIPHER == "UNK" || CIPHER == "") {
-			CIPAUT = append(CIPAUT, CIPHER)
-		}
-		if !(AUTH == "UNK" || AUTH == "") {
-			CIPAUT = append(CIPAUT, AUTH)
-		}
-		if len(CIPAUT) == 2 {
-			ENC += " [" + CIPAUT[0] + ", " + CIPAUT[1] + "]"
-		} else if len(CIPAUT) == 1 {
-			ENC += " [" + CIPAUT[0] + "]"
-		}
-	} else {
-		return true, "OPEN"
-	}
-	return true, ENC
 }
 
 // Get a list with individuals elements
