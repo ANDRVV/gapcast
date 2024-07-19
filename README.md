@@ -43,11 +43,10 @@ go build -buildvcs=false
     <li>Quick and easy attack initialization.</li>
     <li>Interface with attack information.</li>
 </ul>
-<br>
-<br>
-<br>
-<br>
 <p>For more info <a href="https://github.com/ANDRVV/gapcast/wiki/Injection-Table">click here</a>.</p>
+<br>
+<br>
+<br>
 
 <h1 align="center">🕵️‍♂️Deep Scanning</h1>
 
@@ -56,10 +55,9 @@ go build -buildvcs=false
 <p><strong>Step 1</strong>: detect the channel of the AP or STA.</p>
 <p><strong>Step 2</strong>: collects the packets that are exchanged.</p>
 <p><strong>Step 3</strong>: arrange the data and calculate the distance based on different antennas.</p>
-<br>
-<br>
 <p>For more info <a href="https://github.com/ANDRVV/gapcast/wiki/Single-deep-scanning">click here</a>.</p>
 <p>🚀Soon be updated! It will give more stuff!</p>
+<br>
 
 <h1 align="center">📶Monitor mode handler</h1>
 
