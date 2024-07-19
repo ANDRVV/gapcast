@@ -150,6 +150,7 @@ func collect() (prefix string, channelList []int, pcapWriteFile string, fileLoad
 			}
 			if isPresent {
 				writer.Flush()
+				os.Exit(0)
 			} else {
 				fmt.Println("No valid interface found.")
 				os.Exit(1)
@@ -161,6 +162,7 @@ func collect() (prefix string, channelList []int, pcapWriteFile string, fileLoad
 				os.Exit(1)
 			}
 			fmt.Println("Network Manager restarted successful.")
+			os.Exit(0)
 		}
 	} else {
 		fmt.Println("Unrooted.")
