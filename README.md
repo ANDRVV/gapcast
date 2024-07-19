@@ -59,6 +59,17 @@ go build -buildvcs=false
 <p>🚀Soon be updated! It will give more stuff!</p>
 <br>
 
+<h1 align="center">🌐Evil-Twin Captive Portal</h1>
+
+<a align="right" href="https://github.com/ANDRVV/gapcast/wiki/Evil-Twin"><img src="https://github.com/ANDRVV/gapcast/blob/main/images/injtype-eviltwin2.png?raw=true" alt="Evil Twin Example" align="right" width="550"></a>
+<p align="left">By utilizing the INJ Table, you can initiate Evil Twin mode. After selecting the appropriate parameters, the attack will commence. One adapter, if available, will deauthenticate the victim's AP, while the second adapter will establish a rogue AP equipped with a <i>Captive Portal system</i>. This setup allows for the collection of credentials if the <strong>LogIn</strong> page templates are configured.</p>
+
+<p>For more info <a href="https://github.com/ANDRVV/gapcast/wiki/Evil-twin">click here</a>.</p>
+<p>🚀Wiki Documentation soon!</p>
+<br>
+<br>
+<br>
+
 <h1 align="center">📶Monitor mode handler</h1>
 
 <p>For each driver there is a correct <strong>sequence of commands to start the network card correctly in monitor mode</strong>. <strong>Drivers supported by gapcast can also have a txpower modification, bug fixing etc</strong>. If the driver is not supported, it will start monitor mode directly with <a href="https://github.com/aircrack-ng/aircrack-ng">airmon-ng</a>.</p>
