@@ -132,10 +132,16 @@ func ParseChannels(ch string, g5 bool, g5g24 bool) ([]int, string) {
 	for _, channelStr := range strings.Split(ch, ",") {
 		channel, err := strconv.Atoi(channelStr)
 		if err == nil {
-			if g5 && !slices.Contains(G5channels[:], channel) {
-				return nil, fmt.Sprintf("Channel %s is invalid for 5 GHz.", channelStr)
-			} else if !slices.Contains(G24channels[:], channel) {
-				return nil, fmt.Sprintf("Channel %s is invalid for 2.4 GHz.", channelStr)
+			if !g5g24 {
+				if g5 {
+					if !slices.Contains(G5channels[:], channel) {
+						return nil, fmt.Sprintf("Channel %s is invalid for 5 GHz.", channelStr)
+					} 
+				} else {
+					if !slices.Contains(G24channels[:], channel) {
+						return nil, fmt.Sprintf("Channel %s is invalid for 2.4 GHz.", channelStr)
+					}
+				}
 			}
 		} else {
 			return nil, fmt.Sprintf("Channel %s is invalid.", channelStr)
