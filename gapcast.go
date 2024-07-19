@@ -28,6 +28,10 @@ import (
 	"time"
 )
 
+const (
+	fps int = 35
+)
+
 var (
 	apache2logFile   string
 	apnameiface      string
@@ -510,16 +514,15 @@ func update() {
 		elapsedTime = time.Now()
 	}
 	for {
-		time.Sleep(5 * time.Millisecond)
+		time.Sleep(time.Duration(1000/fps/3) * time.Millisecond)
 		if panicExit {
 			exitChannel <- true
 			for {
 				time.Sleep(2 * time.Second)
 			}
 		}
-		if time.Since(refreshTime).Milliseconds() > 16 { // 60 fps
+		if float64(time.Since(refreshTime).Milliseconds()) > float64(1000/fps) {
 			printChart(false)
-			time.Sleep(time.Millisecond * 5)
 			refreshTime = time.Now()
 		}
 	}
