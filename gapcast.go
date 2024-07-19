@@ -583,7 +583,7 @@ func handlePacket(handle *pcap.Handle, chans []int, prefix string, filter bool, 
 					if libs.IsBeacon(packet) {
 						if SRC, err1 := libs.GetSRCBeacon(packet); !err1 && (!filter || ((macFilter == "" || strings.EqualFold(macFilter, SRC)) && (prefix == "?" || strings.HasPrefix(strings.ToLower(SRC), strings.ToLower(prefix))))) {
 							var ENC string = libs.GetENCSuite(packet)
-							if (enc != "?" && !strings.Contains(ENC, enc)) || (cipher != "?" && !strings.Contains(ENC, cipher)) || (auth != "?" && !strings.Contains(ENC, auth)) {
+							if filter && ((enc != "?" && !strings.Contains(ENC, enc)) || (cipher != "?" && !strings.Contains(ENC, cipher)) || (auth != "?" && !strings.Contains(ENC, auth))) {
 								return
 							}
 							var Channel int = libs.GetAPChannel(packet)
