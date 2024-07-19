@@ -32,7 +32,7 @@ go build -buildvcs=false
 
 <h1 align="center">💉Injection Table</h1>
 
-<a align="right" href="https://github.com/ANDRVV/gapcast/wiki/Injection-Table"><img src="https://github.com/ANDRVV/gapcast/blob/main/images/injtype-selection2.png?raw=true" alt="Table Injection Example" align="right" width="450"></a>
+<a align="right" href="https://github.com/ANDRVV/gapcast/wiki/Injection-Table"><img src="https://github.com/ANDRVV/gapcast/blob/main/images/injtype-selection2.png?raw=true" alt="Table Injection Example" align="right" width="350"></a>
 <p align="left">The Injection table is a table where you can insert data and perform an attack or injection.</p>
 
 <p>Advantages:</p>
@@ -50,7 +50,7 @@ go build -buildvcs=false
 
 <h1 align="center">🕵️‍♂️Deep Scanning</h1>
 
-<a align="right" href="https://github.com/ANDRVV/gapcast/wiki/Single-deep-scanning"><img src="https://github.com/ANDRVV/gapcast/raw/main/images/wiki/structure/scfull.png?raw=true" alt="Single deep scanning Example" align="right" width="450"></a>
+<a align="right" href="https://github.com/ANDRVV/gapcast/wiki/Single-deep-scanning"><img src="https://github.com/ANDRVV/gapcast/raw/main/images/wiki/structure/scfull.png?raw=true" alt="Single deep scanning Example" align="right" width="350"></a>
 <p align="left">The Single Deep Scanning feature focuses on a single target, splitting the scan into three phases. By using the BSSID alone, you can obtain a wide range of information.</p>
 <p><strong>Step 1</strong>: detect the channel of the AP or STA.</p>
 <p><strong>Step 2</strong>: collects the packets that are exchanged.</p>
