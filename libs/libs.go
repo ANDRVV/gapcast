@@ -432,35 +432,41 @@ func GetENCSuite(packet gopacket.Packet) (encSuite string) {
 						var buf []byte = info.Info
 						if info.ID == layers.Dot11InformationElementIDRSNInfo {
 							encSuite = "WPA2"
-							var rnsCipherCount uint16 = binary.LittleEndian.Uint16(buf[6:8])
-							buf = info.Info[8:] 
-							if len(buf) > int(rnsCipherCount)*4 {
-								buf = buf[rnsCipherCount*4:]
-								cipherID = uint8(buf[3])
-							}
-							if len(buf) > 1 {
-								var rsnAuthCount = binary.LittleEndian.Uint16(buf[0:2])
-								buf = buf[2:]
-								if len(buf) > int(rsnAuthCount)*4 {
-									buf = buf[rsnAuthCount*4:]
-									authID = uint8(buf[3])
+							if len(buf) > 7 {
+								var rsnCipherCount uint16 = binary.LittleEndian.Uint16(buf[6:8])
+								buf = buf[8:] 
+								if len(buf) > int(rsnCipherCount)*4 {
+									buf = buf[(rsnCipherCount-1)*4:]
+									cipherID = uint8(buf[3])
+									buf = buf[4:]
+								}
+								if len(buf) > 1 {
+									var rsnAuthCount = binary.LittleEndian.Uint16(buf[0:2])
+									buf = buf[2:]
+									if len(buf) > int(rsnAuthCount)*4 {
+										buf = buf[(rsnAuthCount-1)*4:]
+										authID = buf[3]
+									}
 								}
 							}
 							break
 						} else if info.ID == layers.Dot11InformationElementIDVendor && info.Length >= 8 && bytes.Equal(info.OUI, []byte{0, 0x50, 0xf2, 1}) && bytes.HasPrefix(info.Info, []byte{1, 0}) {
 							encSuite = "WPA"
-							var vendorChiperCount uint16 = binary.LittleEndian.Uint16(buf[6:8])
-							buf = buf[8:]
-							if len(buf) > int(vendorChiperCount)*4 {
-								buf = buf[vendorChiperCount*4:]
-								cipherID = uint8(buf[3])
-							}
-							if len(buf) > 1 {
-								var vendorAuthCount = binary.LittleEndian.Uint16(buf[0:2])
-								buf = buf[2:]
-								if len(buf) > int(vendorAuthCount)*4 {
-									buf = buf[vendorAuthCount*4:]
-									authID = uint8(buf[3])
+							if len(buf) > 7 {
+								var vendorChiperCount uint16 = binary.LittleEndian.Uint16(buf[6:8])
+								buf = buf[8:]
+								if len(buf) > int(vendorChiperCount)*4 {
+									buf = buf[(vendorChiperCount-1)*4:]
+									cipherID = uint8(buf[3])
+									buf = buf[4:]
+								}
+								if len(buf) > 1 {
+									var vendorAuthCount = binary.LittleEndian.Uint16(buf[0:2])
+									buf = buf[2:]
+									if len(buf) > int(vendorAuthCount)*4 {
+										buf = buf[(vendorAuthCount-1)*4:]
+										authID = uint8(buf[vendorAuthCount-1*4:][3])
+									}
 								}
 							}
 							break
