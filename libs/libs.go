@@ -424,7 +424,7 @@ func GetENCSuite(packet gopacket.Packet) (encSuite string) {
 	var cipherID, authID uint8
 	if dot11Layer := packet.Layer(layers.LayerTypeDot11).(*layers.Dot11); dot11Layer != nil {
 		if dot11Layer.Flags.WEP() {
-			return "WEP"
+			return "WEP "
 		} else {
 			for _, layer := range packet.Layers() {
 				if layer.LayerType() == layers.LayerTypeDot11InformationElement {
@@ -451,7 +451,7 @@ func GetENCSuite(packet gopacket.Packet) (encSuite string) {
 							}
 							break
 						} else if info.ID == layers.Dot11InformationElementIDVendor && info.Length >= 8 && bytes.Equal(info.OUI, []byte{0, 0x50, 0xf2, 1}) && bytes.HasPrefix(info.Info, []byte{1, 0}) {
-							encSuite = "WPA"
+							encSuite = "WPA "
 							if len(buf) > 7 {
 								var vendorChiperCount uint16 = binary.LittleEndian.Uint16(buf[6:8])
 								buf = buf[8:]
@@ -523,7 +523,7 @@ func GetESSID(packet gopacket.Packet) (ESSID string) {
 			if dot11info, exist := layer.(*layers.Dot11InformationElement); exist && dot11info.ID == layers.Dot11InformationElementIDSSID {	
 				if len(dot11info.Info) == 0 {
 					return "<hidden>"
-				} else if IsValidESSID(ESSID) {
+				} else if IsValidESSID(string(dot11info.Info)) {
 					return string(dot11info.Info)
 				}
 			}
