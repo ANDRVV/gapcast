@@ -264,14 +264,14 @@ func PrintLogo(color Colors, msg string) {
 	fmt.Println(color.Green + "      ?@@@@B5JY55^      " + color.Blue + "| ")
 	fmt.Println(color.Green + "     ^@@@@J             " + color.Blue + "| " + msg)
 	fmt.Println(color.Green + "     5@@@B              " + color.Blue + "| ")
-	fmt.Println(color.Green + "    .&@@@J              " + color.Blue + "| Gapcast for fun!")
+	fmt.Println(color.Green + "    .&@@@J              " + color.Blue + "| Welcome to Gapcast!")
 	fmt.Println(color.Green + "    !@@@@~   .....      " + color.Blue + "| Version " + VERSION)
 	fmt.Println(color.Green + "    Y@@@&.  .B&&&7      " + color.Blue + "| ")
-	fmt.Println(color.Green + "    G@@@B   ~@@@@^      " + color.Blue + "| https://github.com/ANDRVV/gapcast")
+	fmt.Println(color.Green + "    G@@@B   ~@@@@^      " + color.Blue + "| github.com/ANDRVV/gapcast")
 	fmt.Println(color.Green + "   .#@@@5   ?@@@#.      " + color.Blue + "| ")
 	fmt.Println(color.Green + "   :&@@@Y   P@@@P       " + color.Blue + "| ")
 	fmt.Println(color.Green + "   .#@@@#^.:#@@@?       " + color.Blue + "| ")
-	fmt.Println(color.Green + "    !&@@@@##@@@@~.      " + color.Blue + "|                    Andrea Vaccaro")
+	fmt.Println(color.Green + "    !&@@@@##@@@@~.      " + color.Blue + "|            Andrea Vaccaro")
 	fmt.Println(color.Green + "     ^5B&&@&&&#G..      " + color.White + "\n")
 }
 
