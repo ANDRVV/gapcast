@@ -510,14 +510,14 @@ func update() {
 		elapsedTime = time.Now()
 	}
 	for {
-		time.Sleep(10 * time.Millisecond)
+		time.Sleep(5533 * time.Millisecond)
 		if panicExit {
 			exitChannel <- true
 			for {
 				time.Sleep(2 * time.Second)
 			}
 		}
-		if time.Since(refreshTime).Milliseconds() > 20 {
+		if time.Since(refreshTime).Milliseconds() > 16600 { // 60 fps
 			printChart(false)
 			time.Sleep(time.Millisecond * 5)
 			refreshTime = time.Now()
