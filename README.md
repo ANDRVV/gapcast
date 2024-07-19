@@ -67,8 +67,6 @@ go build -buildvcs=false
 <p>For more info <a href="https://github.com/ANDRVV/gapcast/wiki/Evil-twin">click here</a>.</p>
 <p>🚀Wiki Documentation soon!</p>
 <br>
-<br>
-<br>
 
 <h1 align="center">📶Monitor mode handler</h1>
 
