@@ -1565,10 +1565,10 @@ func runEvilTwin(nameiface string) {
 										if len(modelTitle) > 0 {
 											emptyModel, found = false, true
 										}
-										modelTitle = strings.ReplaceAll(strings.Trim(modelTitle, " "), string(13), "")
+										modelTitle = strings.ReplaceAll(strings.Trim(modelTitle, " "), "\r", "")
 									} else if strings.HasPrefix(descrline, "&DESCRIPTION:") {
 										modelDescription, _ = strings.CutPrefix(descrline, "&DESCRIPTION:")
-										modelDescription = strings.ReplaceAll(strings.Trim(modelDescription, " "), string(13), "") 
+										modelDescription = strings.ReplaceAll(strings.Trim(modelDescription, " "), "\r", "") 
 									}
 								}	
 							}
