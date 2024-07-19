@@ -1859,6 +1859,7 @@ func main() {
 		fmt.Println("Invalid operative system: needed GNU/Linux")
 		os.Exit(1)
 	} else {
+		libs.Rtexec(exec.Command("bash", "-c", "stty sane")) // fix typing errors if program crash
 		prefix, channelList, pcapWriteFile, fileLoader, scanAfterLoad, scBSSID := collect()
 		if scBSSID != "?" {
 			rssiRadar = true
