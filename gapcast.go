@@ -576,9 +576,9 @@ func handlePacket(handle *pcap.Handle, chans []int, prefix string, filter bool, 
 				firstMP = pkt.Metadata().Timestamp
 			}
 		}
-		go recEapol(pkt)
-		go func(packet gopacket.Packet) {
-			if packet.ErrorLayer() == nil && packet != nil && packet.Layer(layers.LayerTypeDot11) != nil {
+		if pkt.ErrorLayer() == nil && pkt != nil && pkt.Layer(layers.LayerTypeDot11) != nil {
+			go recEapol(pkt)
+			go func(packet gopacket.Packet) {
 				if PWR, err := libs.GetDBM(packet); !err {
 					if libs.IsBeacon(packet) {
 						if SRC, err1 := libs.GetSRCBeacon(packet); !err1 && (!filter || ((macFilter == "" || strings.EqualFold(macFilter, SRC)) && (prefix == "?" || strings.HasPrefix(strings.ToLower(SRC), strings.ToLower(prefix))))) {
@@ -637,8 +637,9 @@ func handlePacket(handle *pcap.Handle, chans []int, prefix string, filter bool, 
 						}
 					}
 				}
-			}
-		}(pkt)
+
+			}(pkt)
+		}
 	}
 }
 
@@ -1546,7 +1547,7 @@ func runEvilTwin(nameiface string) {
 				if files, err := os.ReadDir(fmt.Sprintf("%s/EvilTwin/models", path)); err == nil && len(files) > 0 {
 					var modelsfound []string
 					for _, file := range files {
-						subfiles, _ := os.ReadDir(fmt.Sprintf("%s/EvilTwin/models/%s", path, file.Name())) 
+						subfiles, _ := os.ReadDir(fmt.Sprintf("%s/EvilTwin/models/%s", path, file.Name()))
 						for _, subfile := range subfiles {
 							if subfile.Name() == "DESCRIPTION" {
 								modelsfound = append(modelsfound, file.Name())
@@ -1570,9 +1571,9 @@ func runEvilTwin(nameiface string) {
 										modelTitle = strings.ReplaceAll(strings.Trim(modelTitle, " "), "\r", "")
 									} else if strings.HasPrefix(descrline, "&DESCRIPTION:") {
 										modelDescription, _ = strings.CutPrefix(descrline, "&DESCRIPTION:")
-										modelDescription = strings.ReplaceAll(strings.Trim(modelDescription, " "), "\r", "") 
+										modelDescription = strings.ReplaceAll(strings.Trim(modelDescription, " "), "\r", "")
 									}
-								}	
+								}
 							}
 							if !emptyModel {
 								fmt.Fprintf(writer, "%s\t%d\t%s\t%s\n", color.White, index, modelTitle, modelDescription)
@@ -1606,7 +1607,7 @@ func runEvilTwin(nameiface string) {
 							}
 						}
 					}
-				}	
+				}
 				libs.SignalError(color, "No valid web-page model found.")
 			}
 		case 1:
