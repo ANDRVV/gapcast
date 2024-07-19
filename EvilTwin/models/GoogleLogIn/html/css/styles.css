@@ -1,0 +1,323 @@
+* {
+  margin: 0;
+  padding: 0;
+  font-family: "Roboto", sans-serif;
+  box-sizing: border-box;
+}
+
+:root {
+  --principal: #202124;
+  --p: #797d80;
+  --blue: #2c7fea;
+  --border-card: #dadce0;
+}
+
+.container {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  min-height: 500px;
+}
+
+.card {
+  height: 500px;
+  width: 448px;
+  border-radius: 8px;
+  border: 1px solid var(--border-card);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 48px 40px 36px;
+}
+
+.card h2 {
+  padding-top: 16px;
+  font-weight: 400;
+  font-size: 24px;
+}
+
+.card h3 {
+  padding: 11px 0 35px 0;
+  font-weight: 400;
+  font-size: 16px;
+}
+
+.card input {
+  padding: 13px 15px;
+  width: 100%;
+  height: 55px;
+  border-radius: 4px;
+  border: 1px solid var(--border-card);
+  outline-color: #1973e8;
+  font-size: 16px;
+}
+
+.card .btn-email {
+  padding-top: 12px;
+  width: 100%;
+}
+
+.card .btn-email button {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--blue);
+  font-weight: 700;
+  font-size: 14px;
+  outline: none;
+}
+
+.card p {
+  padding-top: 48px;
+  color: var(--p);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.card p a {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--blue);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.card .card-bottom {
+  margin-top: 40px;
+  width: 100%;
+  margin-right: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card .card-bottom a {
+  border: none;
+  cursor: pointer;
+  color: var(--blue);
+  font-weight: 800;
+  text-decoration: none;
+  font-size: 14px;
+  margin: 8px;
+}
+
+.card .card-bottom button {
+  background: var(--blue);
+  color: white;
+  padding: 9px 24px;
+  font-size: 14px;
+  outline: none;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.card .card-bottom button:hover {
+  background: #1a66c9;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 24px;
+  font-size: 12px;
+  width: 448px;
+  color: var(--p);
+}
+
+.footer select {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  outline: none;
+}
+
+.footer .footer-span span {
+  margin-left: 32px;
+}
+
+.link {
+  text-decoration: none;
+  color: #2f80ea;
+}
+
+.inline-block {
+  display: inline-block;
+}
+
+.disable-select {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+mark.blue_ {
+  color: #2f80ea;
+  background: none;
+  font-weight: 500;
+}
+
+.footer-span a {
+  -webkit-border-radius: 2px;
+  border-radius: 2px;
+  color: #757575;
+  display: inline-block;
+  margin-top: -6px;
+  -webkit-transition: background .2s;
+  transition: background .2s;
+  text-decoration: none;
+}
+
+input:focus {
+  outline: none;
+  border: 2px solid #1a73e8;
+}
+
+.input-contain{
+    position: relative;
+    width: 100%;
+}
+input{
+    height: 5rem;
+    width: 40rem;
+    border: 2px solid black;
+    border-radius: 1rem;
+}
+
+.placeholder-text{
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border: 3px solid transparent;
+    background-color: transparent;
+    display: flex;
+    align-items: center;
+}
+
+.placeholder-text{
+    pointer-events: none;
+}
+
+.text{
+    padding: 0 0.5rem;
+    background-color: transparent;
+    color: #757575;
+}
+
+input, .placeholder-text{
+    padding: 0 0.3rem;
+}
+
+input:focus{
+    outline: none;
+    border-color: #1a73e8;
+}
+
+input:focus + .placeholder-text .text{
+    background-color: white;
+    color: black;
+    font-size: 12px;
+    margin-top: -8px;
+    transform: translate(0, -170%);
+    border-color: #1a73e8;
+    color: #1a73e8;
+}
+
+.text{
+    transform: translate(0);
+    transition: transform 0.2s ease-out, font-size 0.2s ease-out, background-color 0.2s ease-out, color 0.2s ease-out;
+}
+
+input:focus + .placeholder-text .text, :not(input[value=""]) + .placeholder-text .text{
+    background-color: white;
+    color: black;
+    transform: translate(0, -170%);
+}
+
+input:focus + .placeholder-text .text{
+    border-color: #1a73e8;
+    color: #1a73e8;
+}
+
+@font-face {
+  font-family: 'password';
+  font-style: normal;
+  font-weight: 400;
+  src: url(https://jsbin-user-assets.s3.amazonaws.com/rafaelcastrocouto/password.ttf);
+}
+
+input.key {
+  font-family: 'password';
+  width: 100px; height: 16px;  
+}
+
+.H2SoFe *, .H2SoFe *:before, .H2SoFe *:after {
+    -webkit-box-sizing: inherit;
+    box-sizing: inherit;
+}
+.aCayab {
+    height: 32px;
+    margin-top: 8px;
+    padding-top: 10px !important;
+}
+.jXeDnc:not(.tmR25c) {
+    text-align: center;
+}
+
+.HnRr5d.cd29Sd {
+    padding-left: 5px;
+}
+.HnRr5d.iiFyne {
+    padding-right: 7px;
+}
+.H2SoFe *, .H2SoFe *:before, .H2SoFe *:after {
+    -webkit-box-sizing: inherit;
+    box-sizing: inherit;
+}
+.HnRr5d {
+    -webkit-border-radius: 16px;
+    border-radius: 16px;
+    padding: 0 15px 0 15px;
+}
+.YZrg6 {
+    -webkit-align-items: center;
+    align-items: center;
+    background: #fff;
+    border: 1px solid #dadce0;
+    color: #3c4043;
+    cursor: pointer;
+    display: -webkit-inline-box;
+    display: -webkit-inline-flex;
+    display: inline-flex;
+    font-family: "Google Sans","Noto Sans Myanmar UI",arial,sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.25px;
+    max-width: 100%;
+    position: relative;
+}
+.gPHLDe { 
+    -webkit-border-radius: 10px;
+    border-radius: 10px;
+    height: 20px;
+    margin-right: 8px;
+}
+.qQWzTd {
+    -webkit-border-radius: 50%;
+    border-radius: 50%;
+    color: #5f6368;
+    overflow: hidden;
+}
+
+#password {
+  margin-top: -1px;
+}
