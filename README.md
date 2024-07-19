@@ -173,5 +173,4 @@ go build -buildvcs=false
 <ul>
 <li>New attack from INJ Table</li>
 <li>Documentation for Evil Twin attack</li>
-<li>Web-page models for Evil Twin captive portal</li>
 </ul>
