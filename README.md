@@ -45,8 +45,6 @@ go build -buildvcs=false
 </ul>
 <p>For more info <a href="https://github.com/ANDRVV/gapcast/wiki/Injection-Table">click here</a>.</p>
 <br>
-<br>
-<br>
 
 <h1 align="center">🕵️‍♂️Deep Scanning</h1>
 
