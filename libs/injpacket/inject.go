@@ -1,7 +1,7 @@
 package injpacket
 
 import (
-	"github.com/andrvv/gapcast/v1.0.3-beta/libs"
+	"gapcast/libs"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/pcap"
 )

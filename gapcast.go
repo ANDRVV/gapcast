@@ -3,9 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/andrvv/gapcast/v1.0.3-beta/libs"
-	"github.com/andrvv/gapcast/v1.0.3-beta/libs/injpacket"
-	"github.com/andrvv/gapcast/v1.0.3-beta/libs/jsonreader"
+	"gapcast/libs"
+	"gapcast/libs/injpacket"
+	"gapcast/libs/jsonreader"
 	"github.com/eiannone/keyboard"
 	colo "github.com/fatih/color"
 	"github.com/google/gopacket"
@@ -527,7 +527,7 @@ func update() {
 
 // Detect EAPOL Key and rec it (optional: write on pcap file)
 func recEapol(packet gopacket.Packet) {
-	ap, sta := libs.GetEAPOL_APSTA(packet) 
+	ap, sta := libs.GetEAPOL_APSTA(packet)
 	if libs.IsValidMAC(ap) && libs.IsValidMAC(sta) && !slices.Contains(capturedEapol, fmt.Sprintf("%s<-%s", ap, sta)) {
 		capturedEapol = append(capturedEapol, fmt.Sprintf("%s<-%s", ap, sta))
 	}
