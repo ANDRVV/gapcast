@@ -414,6 +414,97 @@ func GetEAPOL_APSTA(packet gopacket.Packet) (ap string, sta string) {
 	return
 }
 
+// Get cipher suite name from ID
+func getCipherFromID(cipherID uint8) (cipher string) {
+	switch cipherID {
+	case 1:
+		return "WEP"
+	case 2:
+		return "TKIP"
+	case 3:
+		return "WRAP"
+	case 4:
+		return "CCMP"
+	case 5:
+		return "WEP104"
+	case 6:
+		return "CMAC"
+	case 8:
+		return "GCMP"
+	case 9:
+		return "GCMP256"
+	case 10:
+		return "CCMP256"
+	case 11:
+		return "GMAC"
+	case 12:
+		return "GMAC256"
+	case 13:
+		return "CMAC256"
+	default:
+		return "UNK"
+	}
+}
+
+// Get auth suite name from ID
+func getAKMFromID(authID uint8) (auth string) {
+	switch authID {
+	case 1:
+		return "MGT"
+	case 2:
+		return "PSK"
+	case 3:
+		return "FT/MGT256"
+	case 4:
+		return "FT/PSK"
+	case 5:
+		return "MGT256"
+	case 6:
+		return "PSK256"
+	case 7:
+		return "TDLS"
+	case 8, 24:
+		return "SAE"
+	case 9, 25:
+		return "FT/SAE"
+	case 10:
+		return "APPeerKey"
+	case 11:
+		return "MGT-B"
+	case 12:
+		return "MGT-CNSA"
+	case 13:
+		return "FT/MGT-384"
+	case 14:
+		return "FILS/MGT"
+	case 15:
+		return "FILS/MGT-384"
+	case 16:
+		return "FT/FILS-256"
+	case 17:
+		return "FT/FILS-384"
+	case 19:
+		return "FT/PSK-384"
+	case 20:
+		return "PSK-384"
+	default:
+		return "UNK"
+	}
+}
+
+// Check if cipher and AKM they are associated for WPA-3
+func isWPA3Suite(cipher string, auth string) (bool) {
+	// reference https://www.wi-fi.org/system/files/WPA3%20Specification%20v3.3.pdf
+	switch cipher {
+	case "GCMP", "GCMP256", "CCMP":
+		switch auth {
+		case "FT/SAE", "SAE", "FT/PSK", "PSK", "PSK256", "FT/MGT256", "MGT", "MGT256":
+			return true
+		}
+	}
+	return false
+}
+
 // Get channel from beacon sublayer (DSSet)
 func GetAPChannel(packet gopacket.Packet) (channel int) {
 	for _, layer := range packet.Layers() {
@@ -427,7 +518,7 @@ func GetAPChannel(packet gopacket.Packet) (channel int) {
 // Get encryption suite (security protocol, cipher suite, auth suite) Syntax: <enc [cipher, auth]>
 func GetENCSuite(packet gopacket.Packet) (encSuite string) {
 	var cipher, auth string
-	var cipherID, authID uint8
+	encSuite = "OPEN"
 	if dot11Layer := packet.Layer(layers.LayerTypeDot11).(*layers.Dot11); dot11Layer != nil {
 		if dot11Layer.Flags.WEP() {
 			return "WEP "
@@ -443,7 +534,7 @@ func GetENCSuite(packet gopacket.Packet) (encSuite string) {
 								buf = buf[8:] 
 								if len(buf) > int(rsnCipherCount)*4 {
 									buf = buf[(rsnCipherCount-1)*4:]
-									cipherID = uint8(buf[3])
+									cipher = getCipherFromID(buf[3])
 									buf = buf[4:]
 								}
 								if len(buf) > 1 {
@@ -451,7 +542,7 @@ func GetENCSuite(packet gopacket.Packet) (encSuite string) {
 									buf = buf[2:]
 									if len(buf) > int(rsnAuthCount)*4 {
 										buf = buf[(rsnAuthCount-1)*4:]
-										authID = buf[3]
+										auth = getAKMFromID(buf[3])
 									}
 								}
 							}
@@ -463,7 +554,7 @@ func GetENCSuite(packet gopacket.Packet) (encSuite string) {
 								buf = buf[8:]
 								if len(buf) > int(vendorChiperCount)*4 {
 									buf = buf[(vendorChiperCount-1)*4:]
-									cipherID = uint8(buf[3])
+									cipher = getCipherFromID(buf[3])
 									buf = buf[4:]
 								}
 								if len(buf) > 1 {
@@ -471,7 +562,7 @@ func GetENCSuite(packet gopacket.Packet) (encSuite string) {
 									buf = buf[2:]
 									if len(buf) > int(vendorAuthCount)*4 {
 										buf = buf[(vendorAuthCount-1)*4:]
-										authID = uint8(buf[vendorAuthCount-1*4:][3])
+										auth = getAKMFromID(buf[vendorAuthCount-1*4:][3])
 									}
 								}
 							}
@@ -482,31 +573,9 @@ func GetENCSuite(packet gopacket.Packet) (encSuite string) {
 			}
 		}
 	}
-	if encSuite != "" {
-		switch cipherID {
-		case 1:
-			cipher = "WEP"
-		case 2:
-			cipher = "TKIP"
-		case 3:
-			cipher = "WRAP"
-		case 4:
-			cipher = "CCMP"
-		case 5:
-			cipher = "WEP104"
-		default:
-			cipher = "UNK"
-		}
-		switch authID {
-		case 1:
-			auth = "MGT"
-		case 2:
-			auth = "PSK"
-		default:
-			auth = "UNK"
-		}
-	} else {
-		return "OPEN"
+	if encSuite == "OPEN" {return "OPEN"}
+	if isWPA3Suite(cipher, auth) {
+		encSuite = "WPA3"
 	}
 	if cipher != "UNK" {
 		encSuite += fmt.Sprintf(" [%s", cipher)
