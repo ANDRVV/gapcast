@@ -2,14 +2,14 @@ package libs
 
 import (
 	"fmt"
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 	"os"
 	"os/exec"
 	"os/user"
 	"regexp"
 	"strconv"
 	"strings"
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
 )
 
 // Check if the main layer is a beacon

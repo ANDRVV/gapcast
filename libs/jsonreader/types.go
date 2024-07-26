@@ -13,5 +13,5 @@ type RadarConf struct {
 
 type Apache2Conf struct {
 	InfoGrabbed string `json:"Info-Grabbed"`
-	LOGFile string `json:"LOG-File"`
+	LOGFile     string `json:"LOG-File"`
 }
