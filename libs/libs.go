@@ -4,6 +4,15 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"math/rand"
+	"net"
+	"os"
+	"os/exec"
+	"reflect"
+	"sort"
+	"strconv"
+	"strings"
+	"time"
 	"gapcast/libs/RadarRSSI"
 	"gapcast/libs/RadarRSSI/libs"
 	"gapcast/libs/jsonreader"
@@ -14,15 +23,6 @@ import (
 	"github.com/google/gopacket/pcap"
 	"github.com/mattn/go-isatty"
 	"golang.org/x/exp/slices"
-	"math/rand"
-	"net"
-	"os"
-	"os/exec"
-	"reflect"
-	"sort"
-	"strconv"
-	"strings"
-	"time"
 )
 
 var (
@@ -136,7 +136,7 @@ func ParseChannels(ch string, g5 bool, g5g24 bool) ([]int, string) {
 				if g5 {
 					if !slices.Contains(G5channels[:], channel) {
 						return nil, fmt.Sprintf("Channel %s is invalid for 5 GHz.", channelStr)
-					}
+					} 
 				} else {
 					if !slices.Contains(G24channels[:], channel) {
 						return nil, fmt.Sprintf("Channel %s is invalid for 2.4 GHz.", channelStr)
@@ -493,7 +493,7 @@ func getAKMFromID(authID uint8) (auth string) {
 }
 
 // Check if cipher and AKM they are associated for WPA-3
-func isWPA3Suite(cipher string, auth string) bool {
+func isWPA3Suite(cipher string, auth string) (bool) {
 	// reference https://www.wi-fi.org/system/files/WPA3%20Specification%20v3.3.pdf
 	switch cipher {
 	case "GCMP", "GCMP256", "CCMP":
@@ -531,7 +531,7 @@ func GetENCSuite(packet gopacket.Packet) (encSuite string) {
 							encSuite = "WPA2"
 							if len(buf) > 7 {
 								var rsnCipherCount uint16 = binary.LittleEndian.Uint16(buf[6:8])
-								buf = buf[8:]
+								buf = buf[8:] 
 								if len(buf) > int(rsnCipherCount)*4 {
 									buf = buf[(rsnCipherCount-1)*4:]
 									cipher = getCipherFromID(buf[3])
@@ -573,9 +573,7 @@ func GetENCSuite(packet gopacket.Packet) (encSuite string) {
 			}
 		}
 	}
-	if encSuite == "OPEN" {
-		return "OPEN"
-	}
+	if encSuite == "OPEN" {return "OPEN"}
 	if isWPA3Suite(cipher, auth) {
 		encSuite = "WPA3"
 	}
@@ -597,7 +595,7 @@ func GetENCSuite(packet gopacket.Packet) (encSuite string) {
 func GetESSID(packet gopacket.Packet) (ESSID string) {
 	for _, layer := range packet.Layers() {
 		if layer.LayerType() == layers.LayerTypeDot11InformationElement {
-			if dot11info, exist := layer.(*layers.Dot11InformationElement); exist && dot11info.ID == layers.Dot11InformationElementIDSSID {
+			if dot11info, exist := layer.(*layers.Dot11InformationElement); exist && dot11info.ID == layers.Dot11InformationElementIDSSID {	
 				if len(dot11info.Info) == 0 {
 					return "<hidden>"
 				} else if IsValidESSID(string(dot11info.Info)) {
