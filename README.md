@@ -17,7 +17,7 @@
 </div>
 
 <h1 align="center">How to install & run Gapcast</h1>
-<p><strong>:bangbang:Check <a href="https://github.com/ANDRVV/gapcast#Dependencies">dependencies</a>:bangbang:</strong></p>
+<p><strong>‼️Check <a href="https://github.com/ANDRVV/gapcast#Dependencies">dependencies</a>‼️</strong></p>
 <p align="center">🔧For <strong>GNU/Linux</strong>:</p>
 </div>
 
@@ -57,13 +57,12 @@ go build -buildvcs=false
 <p>🚀Soon be updated! It will give more stuff!</p>
 <br>
 
-<h1 align="center">🌐Evil-Twin Captive Portal</h1>
+<h1 align="center">🌐Evil-Twin with Captive Portal</h1>
 
 <a align="right" href="https://github.com/ANDRVV/gapcast/wiki/Evil-Twin"><img src="https://github.com/ANDRVV/gapcast/blob/main/images/injtype-eviltwin2.png?raw=true" alt="Evil Twin Example" align="right" width="550"></a>
 <p align="left">By utilizing the INJ Table, you can initiate Evil Twin mode. After selecting the appropriate parameters, the attack will commence. One adapter, if available, will deauthenticate the victim's AP, while the second adapter will establish a rogue AP equipped with a <i>Captive Portal system</i>. This setup allows for the collection of credentials if the <strong>LogIn</strong> page templates are configured.</p>
 
 <p>For more info <a href="https://github.com/ANDRVV/gapcast/wiki/Evil-twin">click here</a>.</p>
-<p>🚀Wiki Documentation soon!</p>
 <br>
 
 <h1 align="center">📶Monitor mode handler</h1>
