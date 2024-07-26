@@ -577,7 +577,9 @@ func handlePacket(handle *pcap.Handle, chans []int, prefix string, filter bool, 
 			}
 		}
 		if pkt.ErrorLayer() == nil && pkt != nil && pkt.Layer(layers.LayerTypeDot11) != nil {
-			go recEapol(pkt)
+			if singleChannel {
+				go recEapol(pkt)
+			}
 			go func(packet gopacket.Packet) {
 				if PWR, err := libs.GetDBM(packet); !err {
 					if libs.IsBeacon(packet) {
