@@ -492,14 +492,10 @@ func getAKMFromID(authID uint8) (auth string) {
 }
 
 // Check if cipher and AKM they are associated for WPA-3
-func isWPA3Suite(cipher string, auth string) (bool) {
-	// reference https://www.wi-fi.org/system/files/WPA3%20Specification%20v3.3.pdf
-	switch cipher {
-	case "GCMP", "GCMP256", "CCMP":
-		switch auth {
-		case "FT/SAE", "SAE", "FT/PSK", "PSK", "PSK256", "FT/MGT256", "MGT", "MGT256":
-			return true
-		}
+func isWPA3Suite(auth string) (bool) {
+	switch auth {
+	case "FT/SAE", "SAE":
+		return true
 	}
 	return false
 }
@@ -573,7 +569,7 @@ func GetENCSuite(packet gopacket.Packet) (encSuite string) {
 		}
 	}
 	if encSuite == "OPEN" {return "OPEN"}
-	if isWPA3Suite(cipher, auth) {
+	if isWPA3Suite(auth) {
 		encSuite = "WPA3"
 	}
 	if cipher != "UNK" {
