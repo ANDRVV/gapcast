@@ -516,7 +516,7 @@ func GetAPChannel(packet gopacket.Packet) (channel int) {
 
 // Get encryption suite (security protocol, cipher suite, auth suite) Syntax: <enc [cipher, auth]>
 func GetENCSuite(packet gopacket.Packet) (encSuite string) {
-	var cipher, auth string
+	var cipher, auth string = "UNK", "UNK"
 	encSuite = "OPEN"
 	if dot11Layer := packet.Layer(layers.LayerTypeDot11).(*layers.Dot11); dot11Layer != nil {
 		if dot11Layer.Flags.WEP() {
