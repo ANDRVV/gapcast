@@ -178,5 +178,4 @@ go build -buildvcs=false
 <h1 align="center">🚀Upcoming features</h1>
 <ul>
 <li>New attack from INJ Table</li>
-<li>Documentation for Evil Twin attack</li>
 </ul>
