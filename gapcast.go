@@ -29,7 +29,7 @@ import (
 )
 
 const (
-	fps int = 35
+	fps int = 25
 )
 
 var (
@@ -481,7 +481,7 @@ func channelChanger(channelList []int) {
 		if singleChannel {
 			libs.ChangeChannel(nameiface, channelList[0])
 			globalChannel = channelList[0]
-			time.Sleep(130 * time.Millisecond)
+			time.Sleep(180 * time.Millisecond)
 		} else {
 			for {
 				for _, ch := range channelList {
@@ -496,7 +496,7 @@ func channelChanger(channelList []int) {
 						mutex.Lock()
 						globalChannel = ch
 						mutex.Unlock()
-						time.Sleep(130 * time.Millisecond)
+						time.Sleep(180 * time.Millisecond)
 					}
 				}
 			}
@@ -511,22 +511,18 @@ func channelChanger(channelList []int) {
 
 // Update analyzer table
 func update() {
-	var refreshTime time.Time = time.Now()
 	if elapsedTime == (time.Time{}) {
 		elapsedTime = time.Now()
 	}
 	for {
-		time.Sleep(time.Duration(1000/fps/3) * time.Millisecond)
+		time.Sleep(time.Duration(1000/fps) * time.Millisecond)
 		if panicExit {
 			exitChannel <- true
 			for {
 				time.Sleep(2 * time.Second)
 			}
 		}
-		if float64(time.Since(refreshTime).Milliseconds()) > float64(1000/fps) {
-			printChart(false)
-			refreshTime = time.Now()
-		}
+		printChart(false)
 	}
 }
 
