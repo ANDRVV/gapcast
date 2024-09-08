@@ -301,8 +301,8 @@ func ParseMac(mac string) (hwAddr net.HardwareAddr) {
 
 // Seconds to format model 00h00m00s
 func SecondsToHMS(seconds int) (formattedTime string) {
-	elap := time.Duration(seconds)* time.Second
-	hours, minutes, seconds2 := int(elap.Hours()), int(elap.Minutes()), int(elap.Seconds())
+	elap := time.Duration(seconds) * time.Second
+	hours, minutes, seconds2 := int(elap / 60 / 60), int(elap / 60), int(elap)
 	if hours > 0 {
 		formattedTime += fmt.Sprintf("%dh ", hours)
 	}
