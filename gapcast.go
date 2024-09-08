@@ -945,7 +945,7 @@ func regESSID(nameiface string) {
 			mutex.Unlock()
 			return
 		}
-		if eventdata.Key == keyboard.KeyBackspace && len(esdTable) > 0 {
+		if (eventdata.Key == keyboard.KeyBackspace || eventdata.Key == keyboard.KeyBackspace2) && len(esdTable) > 0 {
 			esdTable = esdTable[:len(esdTable)-1]
 			mutex.Unlock()
 			continue
@@ -992,7 +992,7 @@ func regCh(nameiface string, ChannelList []int) {
 			mutex.Unlock()
 			return
 		}
-		if eventdata.Key == keyboard.KeyBackspace && len(chTable) > 0 {
+		if (eventdata.Key == keyboard.KeyBackspace || eventdata.Key == keyboard.KeyBackspace2) && len(chTable) > 0 {
 			chTable = chTable[:len(chTable)-1]
 		}
 		if eventdata.Key == keyboard.KeyEnter {
@@ -1147,7 +1147,7 @@ func regWM(way string, nameiface string, ChannelList []int) {
 			mutex.Unlock()
 			return
 		}
-		if eventdata.Key == keyboard.KeyBackspace {
+		if eventdata.Key == keyboard.KeyBackspace || eventdata.Key == keyboard.KeyBackspace2 {
 			if way == "src" && len(srcTable) > 0 {
 				srcTable = srcTable[:len(srcTable)-1]
 			} else if way == "dst" && len(dstTable) > 0 {
