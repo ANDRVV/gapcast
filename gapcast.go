@@ -187,11 +187,11 @@ func collect() (prefix string, channelList []int, pcapWriteFile string, fileLoad
 		fmt.Printf("%s is invalid parameter for enc, available: 'OPEN', 'WPE', 'WPA', 'WPA2'.\n\n", strings.ToUpper(*encr))
 		flag.Usage()
 	}
-	if *cip != "?" && !strings.Contains("WEP, TKIP, WRAP, CCMP, WEP104", strings.ToUpper(*cip)) {
+	if *cip != "?" && !strings.Contains("WEP TKIP WRAP CCMP WEP104 CMAC GCMP GCMP256 CCMP256 GMAC GMAC256 CMAC256", strings.ToUpper(*cip)) {
 		fmt.Printf("%s is invalid parameter for cipher (-cipher), available: 'WEP', 'TKIP', 'WRAP', 'CCMP', 'WEP104'.\n\n", strings.ToUpper(*cip))
 		flag.Usage()
 	}
-	if *aut != "?" && !strings.Contains("MGT, PSK", strings.ToUpper(*aut)) {
+	if *aut != "?" && !strings.Contains("MGT PSK", strings.ToUpper(*aut)) {
 		fmt.Printf("%s is invalid parameter for auth (-auth), available: 'MGT', 'PSK'.\n\n", strings.ToUpper(*aut))
 		flag.Usage()
 	}

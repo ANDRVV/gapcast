@@ -87,7 +87,7 @@ func PrintUsage() {
 	fmt.Println("        Shows only beacons.")
 	fmt.Println("   -enc <OPEN, WPE, WPA, WPA2>")
 	fmt.Println("        Select encryption filter.")
-	fmt.Println("   -cipher <WEP, TKIP, WRAP, CCMP, WEP104>")
+	fmt.Println("   -cipher <WEP, TKIP, WRAP, CCMP, WEP104, CMAC, GCMP, GCMP256, CCMP256, GMAC, GMAC256, CMAC256>")
 	fmt.Println("        Select cipher suite filter.")
 	fmt.Println("   -auth <MGT, PSK>")
 	fmt.Println("        Select auth suite filter.")
