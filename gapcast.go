@@ -116,7 +116,7 @@ func collect() (prefix string, channelList []int, pcapWriteFile string, fileLoad
 	var showiface *bool = flag.Bool("show-i", false, "")
 	var nmrestart *bool = flag.Bool("nm-restart", false, "")
 	var sc *string = flag.String("sc", "?", "")
-	var encr *string = flag.String("enc", "?", "")   // OPEN, WPE, WPA, WPA2
+	var encr *string = flag.String("enc", "?", "")   // OPEN, WPE, WPA, WPA2, WPA3
 	var cip *string = flag.String("cipher", "?", "") // WEP, TKIP, WRAP, CCMP, WEP104
 	var aut *string = flag.String("auth", "?", "")   // MGT, PSK
 
@@ -183,7 +183,7 @@ func collect() (prefix string, channelList []int, pcapWriteFile string, fileLoad
 		fmt.Print("You can't add both -5g and -2.4+5g, you have to select only one.\n\n")
 		flag.Usage()
 	}
-	if *encr != "?" && !strings.Contains("OPEN WPE WPA WPA2", strings.ToUpper(*encr)) {
+	if *encr != "?" && !strings.Contains("OPEN WPE WPA WPA2 WPA3", strings.ToUpper(*encr)) {
 		fmt.Printf("%s is invalid parameter for enc, available: 'OPEN', 'WPE', 'WPA', 'WPA2'.\n\n", strings.ToUpper(*encr))
 		flag.Usage()
 	}
