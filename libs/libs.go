@@ -85,7 +85,7 @@ func PrintUsage() {
 	fmt.Println("        Select BSSID prefix filter.")
 	fmt.Println("   -beacon")
 	fmt.Println("        Shows only beacons.")
-	fmt.Println("   -enc <OPEN, WPE, WPA, WPA2>")
+	fmt.Println("   -enc <OPEN, WPE, WPA, WPA2, WPA3>")
 	fmt.Println("        Select encryption filter.")
 	fmt.Println("   -cipher <WEP, TKIP, WRAP, CCMP, WEP104>")
 	fmt.Println("        Select cipher suite filter.")
