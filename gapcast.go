@@ -191,7 +191,7 @@ func collect() (prefix string, channelList []int, pcapWriteFile string, fileLoad
 		fmt.Printf("%s is invalid parameter for cipher (-cipher), available: 'WEP', 'TKIP', 'WRAP', 'CCMP', 'WEP104'.\n\n", strings.ToUpper(*cip))
 		flag.Usage()
 	}
-	if *aut != "?" && !strings.Contains("MGT PSK", strings.ToUpper(*aut)) {
+	if *aut != "?" && !strings.Contains("MGT PSK FT/MGT256 FT/PSK MGT256 PSK256 TDLS SAE FT/SAE APPeerKey MGT-B MGT-CNSA FT/MGT-384 FILS/MGT FILS/MGT-384 FT/FILS-256 FT/FILS-384 FT/PSK-384 PSK-384", strings.ToUpper(*aut)) {
 		fmt.Printf("%s is invalid parameter for auth (-auth), available: 'MGT', 'PSK'.\n\n", strings.ToUpper(*aut))
 		flag.Usage()
 	}
