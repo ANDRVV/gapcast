@@ -766,13 +766,25 @@ func fseqdata(color Colors, seqdata []InjectData, injdata INJTable) string {
 // Get INJ Table row of gapcast software structure
 func GetINJTABLERow(color Colors, graph int, tableinj INJTable, src string, dst string, essid string, seqdata []InjectData, injerr int, injch string) (row string) {
 	var rowinj string
+
+	rowinj += ">  ==================================" + color.Null + color.White + "\n"
+	rowinj += color.White + "                                    \n" + color.White
 	switch graph {
 	case 0:
-		rowinj += ">  ==================================" + color.Null + color.White + "\n"
-		rowinj += color.White + "                                    \n" + color.White
 		rowinj += color.White + "     | [" + color.Blue + "INJ" + color.White + "] ?\n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "SRC" + color.White + "] " + fmaclist(tableinj.SRC) + "\n" + color.White
+	default:
+		rowinj += color.White + "     | [" + color.Blue + "INJ" + color.White + "] " + tableinj.INJ + "\n" + color.White
+	}
+	rowinj += color.White + "     | [" + color.Blue + "SRC" + color.White + "] " + fmaclist(tableinj.SRC) + "\n" + color.White
+	switch graph {
+	case 10, 11:
+		rowinj += color.White + "     | [" + color.Blue + "DST" + color.White + "] FF:FF:FF:FF:FF:FF\n" + color.White
+	default:
 		rowinj += color.White + "     | [" + color.Blue + "DST" + color.White + "] " + fmaclist(tableinj.DST) + "\n" + color.White
+	}
+
+	switch graph {
+	case 0:
 		rowinj += color.White + "     |                            	 \n" + color.White
 		rowinj += color.White + "     | Select [" + color.Blue + "INJ" + color.White + "] :\n" + color.White
 		rowinj += color.White + "     |                               \n" + color.White
@@ -782,11 +794,6 @@ func GetINJTABLERow(color Colors, graph int, tableinj INJTable, src string, dst 
 		rowinj += color.White + "                                    \n" + color.White
 		rowinj += "   ==================================" + color.Null + color.White + "\n\n"
 	case 1:
-		rowinj += ">  ==================================" + color.Null + color.White + "\n"
-		rowinj += color.White + "                                    \n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "INJ" + color.White + "] " + tableinj.INJ + "\n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "SRC" + color.White + "] " + fmaclist(tableinj.SRC) + "\n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "DST" + color.White + "] " + fmaclist(tableinj.DST) + "\n" + color.White
 		if tableinj.INJ == "Beacon" {
 			rowinj += color.White + "     | [" + color.Blue + "CHN" + color.White + "] " + ValidPositiveNumberTest(strconv.Itoa(tableinj.CHANNEL)) + "\n" + color.White
 			rowinj += color.White + "     | [" + color.Blue + "ESD" + color.White + "] " + StringEmptyTest(tableinj.ESSID) + "\n" + color.White
@@ -803,11 +810,6 @@ func GetINJTABLERow(color Colors, graph int, tableinj INJTable, src string, dst 
 		rowinj += color.White + "                                    \n" + color.White
 		rowinj += "   ==================================" + color.Null + color.White + "\n\n"
 	case 2:
-		rowinj += ">  ==================================" + color.Null + color.White + "\n"
-		rowinj += color.White + "                                    \n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "INJ" + color.White + "] " + tableinj.INJ + "\n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "SRC" + color.White + "] " + fmaclist(tableinj.SRC) + "\n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "DST" + color.White + "] " + fmaclist(tableinj.DST) + "\n" + color.White
 		if tableinj.INJ == "Beacon" {
 			rowinj += color.White + "     | [" + color.Blue + "CHN" + color.White + "] " + ValidPositiveNumberTest(strconv.Itoa(tableinj.CHANNEL)) + "\n" + color.White
 			rowinj += color.White + "     | [" + color.Blue + "ESD" + color.White + "] " + StringEmptyTest(tableinj.ESSID) + "\n" + color.White
@@ -825,11 +827,6 @@ func GetINJTABLERow(color Colors, graph int, tableinj INJTable, src string, dst 
 		rowinj += color.White + "                                    \n" + color.White
 		rowinj += "   ==================================" + color.Null + color.White + "\n\n"
 	case 3:
-		rowinj += ">  ==================================" + color.Null + color.White + "\n"
-		rowinj += color.White + "                                    \n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "INJ" + color.White + "] " + tableinj.INJ + "\n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "SRC" + color.White + "] " + fmaclist(tableinj.SRC) + "\n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "DST" + color.White + "] " + fmaclist(tableinj.DST) + "\n" + color.White
 		rowinj += color.White + "     |                            	 \n" + color.White
 		rowinj += color.White + "     | Select [" + color.Blue + "DST" + color.White + "] :\n" + color.White
 		rowinj += color.White + "     |                               \n" + color.White
@@ -842,11 +839,6 @@ func GetINJTABLERow(color Colors, graph int, tableinj INJTable, src string, dst 
 		rowinj += color.White + "                                    \n" + color.White
 		rowinj += "   ==================================" + color.Null + color.White + "\n\n"
 	case 4:
-		rowinj += ">  ==================================" + color.Null + color.White + "\n"
-		rowinj += color.White + "                                    \n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "INJ" + color.White + "] " + tableinj.INJ + "\n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "SRC" + color.White + "] " + fmaclist(tableinj.SRC) + "\n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "DST" + color.White + "] " + fmaclist(tableinj.DST) + "\n" + color.White
 		rowinj += color.White + "     |                            	 \n" + color.White
 		rowinj += color.White + "     | Select [" + color.Blue + "DST" + color.White + "] :\n" + color.White
 		rowinj += color.White + "     |                               \n" + color.White
@@ -856,11 +848,6 @@ func GetINJTABLERow(color Colors, graph int, tableinj INJTable, src string, dst 
 		rowinj += color.White + "                                    \n" + color.White
 		rowinj += "   ==================================" + color.Null + color.White + "\n\n"
 	case 5:
-		rowinj += ">  ==================================" + color.Null + color.White + "\n"
-		rowinj += color.White + "                                    \n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "INJ" + color.White + "] " + tableinj.INJ + "\n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "SRC" + color.White + "] " + fmaclist(tableinj.SRC) + "\n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "DST" + color.White + "] " + fmaclist(tableinj.DST) + "\n" + color.White
 		rowinj += color.White + "     |                            	 \n" + color.White
 		rowinj += color.White + "     | Select another [" + color.Blue + "SRC" + color.White + "] ?\n" + color.White
 		rowinj += color.White + "     |                               \n" + color.White
@@ -869,11 +856,6 @@ func GetINJTABLERow(color Colors, graph int, tableinj INJTable, src string, dst 
 		rowinj += color.White + "                                     \n" + color.White
 		rowinj += "   ==================================" + color.Null + color.White + "\n\n"
 	case 6:
-		rowinj += ">  ==================================" + color.Null + color.White + "\n"
-		rowinj += color.White + "                                    \n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "INJ" + color.White + "] " + tableinj.INJ + "\n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "SRC" + color.White + "] " + fmaclist(tableinj.SRC) + "\n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "DST" + color.White + "] " + fmaclist(tableinj.DST) + "\n" + color.White
 		rowinj += color.White + "     |                            	 \n" + color.White
 		rowinj += color.White + "     | Select another [" + color.Blue + "DST" + color.White + "] ?\n" + color.White
 		rowinj += color.White + "     |                               \n" + color.White
@@ -882,11 +864,6 @@ func GetINJTABLERow(color Colors, graph int, tableinj INJTable, src string, dst 
 		rowinj += color.White + "                                     \n" + color.White
 		rowinj += "   ==================================" + color.Null + color.White + "\n\n"
 	case 7:
-		rowinj += ">  ==================================" + color.Null + color.White + "\n"
-		rowinj += color.White + "                                    \n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "INJ" + color.White + "] " + tableinj.INJ + "\n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "SRC" + color.White + "] " + fmaclist(tableinj.SRC) + "\n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "DST" + color.White + "] " + fmaclist(tableinj.DST) + "\n" + color.White
 		if tableinj.INJ == "Beacon" {
 			rowinj += color.White + "     | [" + color.Blue + "CHN" + color.White + "] " + ValidPositiveNumberTest(strconv.Itoa(tableinj.CHANNEL)) + "\n" + color.White
 			rowinj += color.White + "     | [" + color.Blue + "ESD" + color.White + "] " + StringEmptyTest(tableinj.ESSID) + "\n" + color.White
@@ -918,21 +895,11 @@ func GetINJTABLERow(color Colors, graph int, tableinj INJTable, src string, dst 
 		if injerr == 1 {
 			switch tableinj.INJ {
 			case "De-Auth":
-				rowinj += ">  ==================================" + color.Null + color.White + "\n"
-				rowinj += color.White + "                                    \n" + color.White
-				rowinj += color.White + "     | [" + color.Blue + "INJ" + color.White + "] " + tableinj.INJ + "\n" + color.White
-				rowinj += color.White + "     | [" + color.Blue + "SRC" + color.White + "] " + fmaclist(tableinj.SRC) + "\n" + color.White
-				rowinj += color.White + "     | [" + color.Blue + "DST" + color.White + "] " + fmaclist(tableinj.DST) + "\n" + color.White
 				rowinj += color.White + "     |                            	 \n" + color.White
 				rowinj += color.White + "     | [" + color.Red + "ERROR" + color.White + "] You cannot specify an [" + color.Blue + "SRC" + color.White + "] on De-Auth mode that has not been scanned.\n" + color.White
 				rowinj += color.White + "                                     \n" + color.White
 				rowinj += "   ==================================" + color.Null + color.White + "\n\n"
 			case "Beacon":
-				rowinj += ">  ==================================" + color.Null + color.White + "\n"
-				rowinj += color.White + "                                    \n" + color.White
-				rowinj += color.White + "     | [" + color.Blue + "INJ" + color.White + "] " + tableinj.INJ + "\n" + color.White
-				rowinj += color.White + "     | [" + color.Blue + "SRC" + color.White + "] " + fmaclist(tableinj.SRC) + "\n" + color.White
-				rowinj += color.White + "     | [" + color.Blue + "DST" + color.White + "] " + fmaclist(tableinj.DST) + "\n" + color.White
 				rowinj += color.White + "     | [" + color.Blue + "CHN" + color.White + "] " + ValidPositiveNumberTest(strconv.Itoa(tableinj.CHANNEL)) + "\n" + color.White
 				rowinj += color.White + "     | [" + color.Blue + "ESD" + color.White + "] " + StringEmptyTest(tableinj.ESSID) + "\n" + color.White
 				rowinj += color.White + "     |                            	 \n" + color.White
@@ -941,11 +908,6 @@ func GetINJTABLERow(color Colors, graph int, tableinj INJTable, src string, dst 
 				rowinj += color.White + "                                     \n" + color.White
 				rowinj += "   ==================================" + color.Null + color.White + "\n\n"
 			case "EvilTwin":
-				rowinj += ">  ==================================" + color.Null + color.White + "\n"
-				rowinj += color.White + "                                    \n" + color.White
-				rowinj += color.White + "     | [" + color.Blue + "INJ" + color.White + "] " + tableinj.INJ + "\n" + color.White
-				rowinj += color.White + "     | [" + color.Blue + "SRC" + color.White + "] " + fmaclist(tableinj.SRC) + "\n" + color.White
-				rowinj += color.White + "     | [" + color.Blue + "DST" + color.White + "] " + fmaclist(tableinj.DST) + "\n" + color.White
 				rowinj += color.White + "     |                            	 \n" + color.White
 				rowinj += color.White + "     | [" + color.Red + "ERROR" + color.White + "] You cannot specify an [" + color.Blue + "SRC" + color.White + "] on Evil-Twin mode that has not been scanned.\n" + color.White
 				rowinj += color.White + "                                     \n" + color.White
@@ -953,11 +915,6 @@ func GetINJTABLERow(color Colors, graph int, tableinj INJTable, src string, dst 
 			}
 		} else if injerr == 2 {
 			if tableinj.INJ == "Beacon" {
-				rowinj += ">  ==================================" + color.Null + color.White + "\n"
-				rowinj += color.White + "                                    \n" + color.White
-				rowinj += color.White + "     | [" + color.Blue + "INJ" + color.White + "] " + tableinj.INJ + "\n" + color.White
-				rowinj += color.White + "     | [" + color.Blue + "SRC" + color.White + "] " + fmaclist(tableinj.SRC) + "\n" + color.White
-				rowinj += color.White + "     | [" + color.Blue + "DST" + color.White + "] " + fmaclist(tableinj.DST) + "\n" + color.White
 				rowinj += color.White + "     | [" + color.Blue + "CHN" + color.White + "] " + ValidPositiveNumberTest(strconv.Itoa(tableinj.CHANNEL)) + "\n" + color.White
 				rowinj += color.White + "     | [" + color.Blue + "ESD" + color.White + "] " + StringEmptyTest(tableinj.ESSID) + "\n" + color.White
 				rowinj += color.White + "     |                            	 \n" + color.White
@@ -965,11 +922,6 @@ func GetINJTABLERow(color Colors, graph int, tableinj INJTable, src string, dst 
 				rowinj += color.White + "                                     \n" + color.White
 				rowinj += "   ==================================" + color.Null + color.White + "\n\n"
 			} else if tableinj.INJ == "De-Auth" {
-				rowinj += ">  ==================================" + color.Null + color.White + "\n"
-				rowinj += color.White + "                                    \n" + color.White
-				rowinj += color.White + "     | [" + color.Blue + "INJ" + color.White + "] " + tableinj.INJ + "\n" + color.White
-				rowinj += color.White + "     | [" + color.Blue + "SRC" + color.White + "] " + fmaclist(tableinj.SRC) + "\n" + color.White
-				rowinj += color.White + "     | [" + color.Blue + "DST" + color.White + "] " + fmaclist(tableinj.DST) + "\n" + color.White
 				rowinj += color.White + "     |                            	 \n" + color.White
 				rowinj += color.White + "     | [" + color.Red + "ERROR" + color.White + "] The [" + color.Blue + "SRC" + color.White + "] stations were not found.\n" + color.White
 				rowinj += color.White + "                                     \n" + color.White
@@ -977,11 +929,6 @@ func GetINJTABLERow(color Colors, graph int, tableinj INJTable, src string, dst 
 			}
 		}
 	case 10:
-		rowinj += ">  ==================================" + color.Null + color.White + "\n"
-		rowinj += color.White + "                                    \n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "INJ" + color.White + "] " + tableinj.INJ + "\n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "SRC" + color.White + "] " + fmaclist(tableinj.SRC) + "\n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "DST" + color.White + "] FF:FF:FF:FF:FF:FF" + "\n" + color.White
 		rowinj += color.White + "     | [" + color.Blue + "CHN" + color.White + "] " + ValidPositiveNumberTest(strconv.Itoa(tableinj.CHANNEL)) + "\n" + color.White
 		rowinj += color.White + "     | [" + color.Blue + "ESD" + color.White + "] " + StringEmptyTest(tableinj.ESSID) + "\n" + color.White
 		rowinj += color.White + "     |                            	 \n" + color.White
@@ -993,11 +940,6 @@ func GetINJTABLERow(color Colors, graph int, tableinj INJTable, src string, dst 
 		rowinj += color.White + "                                    \n" + color.White
 		rowinj += "   ==================================" + color.Null + color.White + "\n\n"
 	case 11:
-		rowinj += ">  ==================================" + color.Null + color.White + "\n"
-		rowinj += color.White + "                                    \n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "INJ" + color.White + "] " + tableinj.INJ + "\n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "SRC" + color.White + "] " + fmaclist(tableinj.SRC) + "\n" + color.White
-		rowinj += color.White + "     | [" + color.Blue + "DST" + color.White + "] FF:FF:FF:FF:FF:FF" + "\n" + color.White
 		rowinj += color.White + "     | [" + color.Blue + "CHN" + color.White + "] " + ValidPositiveNumberTest(strconv.Itoa(tableinj.CHANNEL)) + "\n" + color.White
 		rowinj += color.White + "     | [" + color.Blue + "ESD" + color.White + "] " + StringEmptyTest(tableinj.ESSID) + "\n" + color.White
 		rowinj += color.White + "     |                            	 \n" + color.White
