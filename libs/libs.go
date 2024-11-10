@@ -304,18 +304,17 @@ func ParseMac(mac string) (hwAddr net.HardwareAddr) {
 
 // Seconds to format model 00h00m00s
 func SecondsToHMS(seconds int) (formattedTime string) {
-	elap := time.Duration(seconds) * time.Second
-	hours, minutes, seconds2 := int(elap / 60 / 60), int(elap / 60), int(elap)
-	if hours > 0 {
-		formattedTime += fmt.Sprintf("%dh ", hours)
+	var hours int = seconds / 3600
+	var minutes int = (seconds % 3600) / 60
+	seconds = seconds % 60
+	switch {
+	case hours > 0:
+		return fmt.Sprintf("%dh %dm %ds", hours, minutes, seconds)
+	case minutes > 0:
+		return fmt.Sprintf("%dm %ds", minutes, seconds)
+	default:
+		return fmt.Sprintf("%ds", seconds)
 	}
-	if minutes > 0 || hours > 0 {
-		formattedTime += fmt.Sprintf("%dm ", minutes)
-	}
-	if seconds2 > 0 || formattedTime == "" {
-		formattedTime += fmt.Sprintf("%ds", seconds2)
-	}
-	return formattedTime
 }
 
 // Radiolocalize a device from data and return meters (approximately)
