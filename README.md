@@ -28,6 +28,8 @@ go build -buildvcs=false
 ./gapcast -i <interface>
 ```
 
+<p align="center">❄️Or, you can install Gapcast from Nix-Os Packages</p>
+
 ![](https://github.com/ANDRVV/gapcast/blob/main/images/gapcast-scan.png?raw=true)
 
 <h1 align="center">💉Injection Table</h1>
