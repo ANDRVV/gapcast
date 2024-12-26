@@ -25,6 +25,7 @@ jobs:
       run: |
         sudo apt update 2>/dev/null | grep packages | cut -d '.' -f 1
         sudo apt install libpcap-dev
+        sudo apt install libx11-dev
 
     - name: Build
       run: go build -v ./...
