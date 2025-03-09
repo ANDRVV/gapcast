@@ -42,7 +42,7 @@ var (
 		/*  40 MHz coverage */ 38, 46, 54, 62, 102, 110, 126, 134, 142, 159, 167, 175,
 		/*  20 MHz coverage */ 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92, 96, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 149, 153, 157, 161, 165, 169, 173, 177,
 	}
-	
+
 	G5g24Channels []int = []int(append(G24channels, G5channels...))
 )
 
@@ -65,62 +65,63 @@ func ScreenClear() {
 
 // Print gapcast usage
 func PrintUsage() {
-	fmt.Println("Usage of gapcast:")
-	fmt.Println()
-	fmt.Println("Interfaces & band misc:")
-	fmt.Println("   -show-i")
-	fmt.Println("        Shows available network interfaces.")
-	fmt.Println("   -i <interface> : string")
-	fmt.Println("        Select network interface.")
-	fmt.Println("   -5g")
-	fmt.Println("        Start with 5 Ghz band.")
-	fmt.Println("   -2.4+5g")
-	fmt.Println("        Start with 2.4/5 Ghz band.")
-	fmt.Println("   -nm-restart")
-	fmt.Println("        Restart Network Manager and reset configs.")
-	fmt.Println()
-	fmt.Println("Filter misc:")
-	fmt.Println("   -c <channel> : int")
-	fmt.Println("   -c <channels> : int,int,int...")
-	fmt.Println("        Select working channel.")
-	fmt.Println("   -b <BSSID> : string")
-	fmt.Println("        Select BSSID filter.")
-	fmt.Println("   -p <BSSID PREFIX> : string")
-	fmt.Println("        Select BSSID prefix filter.")
-	fmt.Println("   -beacon")
-	fmt.Println("        Shows only beacons.")
-	fmt.Println("   -enc <OPEN, WPE, WPA, WPA2, WPA3>")
-	fmt.Println("        Select encryption filter.")
-	fmt.Println("   -cipher <WEP, TKIP, WRAP, CCMP, WEP104, CMAC, GCMP,")
-	fmt.Println("            GCMP256, CCMP256, GMAC, GMAC256, CMAC256>")
-	fmt.Println("        Select cipher suite filter.")
-	fmt.Println("   -auth <MGT, PSK, FT/MGT256, FT/PSK, MGT256, PSK256,")
-	fmt.Println("          TDLS, SAE, FT/SAE, APPeerKey, MGT-B, MGT-CNSA, FT/MGT-384,")
-	fmt.Println("          FILS/MGT, FILS/MGT-384, FT/FILS-256, FT/FILS-384, FT/PSK-384, PSK-384>")
-	fmt.Println("        Select auth suite filter.")
-	fmt.Println("   -d")
-	fmt.Println("        Disable inactive devices hider.")
-	fmt.Println("   -radar")
-	fmt.Println("        Enable RadarRSSI.")
-	fmt.Println()
-	fmt.Println("Work with pcap:")
-	fmt.Println("    -w <file>.pcap")
-	fmt.Println("        Write to pcap file.")
-	fmt.Println("    -l <file>.pcap")
-	fmt.Println("        Load pcap file.")
-	fmt.Println()
-	fmt.Println("Features:")
-	fmt.Println("    -sc <BSSID> : string")
-	fmt.Println("        Scan a single target carefully.")
-	fmt.Println()
-	fmt.Println("Radar misc:")
-	fmt.Println("    -dbi-tx <int (or float)>")
-	fmt.Println("        Set TX antenna dBi.")
-	fmt.Println("    -dbi-rx <int (or float)>")
-	fmt.Println("        Set RX antenna dBi.")
-	fmt.Println("    -dbm <int (or float)>")
-	fmt.Println("        Set TX power.")
-	fmt.Println()
+	text := `Usage of gapcast:
+	
+Interfaces & band misc:
+   -show-i")
+        Shows available network interfaces.
+   -i <interface> : string
+        Select network interface.
+   -5g
+        Start with 5 Ghz band.
+   -2.4+5g
+        Start with 2.4/5 Ghz band.
+   -nm-restart
+        Restart Network Manager and reset configs.
+
+Filter misc:")
+   -c <channel> : int")
+   -c <channels> : int,int,int...
+        Select working channel.
+   -b <BSSID> : string")
+        Select BSSID filter.
+   -p <BSSID PREFIX> : string
+        Select BSSID prefix filter.
+   -beacon
+        Shows only beacons.
+   -enc <OPEN, WPE, WPA, WPA2, WPA3>
+        Select encryption filter.
+   -cipher <WEP, TKIP, WRAP, CCMP, WEP104, CMAC, GCMP,
+            GCMP256, CCMP256, GMAC, GMAC256, CMAC256>
+        Select cipher suite filter.
+   -auth <MGT, PSK, FT/MGT256, FT/PSK, MGT256, PSK256,
+          TDLS, SAE, FT/SAE, APPeerKey, MGT-B, MGT-CNSA, FT/MGT-384,
+          FILS/MGT, FILS/MGT-384, FT/FILS-256, FT/FILS-384, FT/PSK-384, PSK-384>
+        Select auth suite filter.
+   -d
+        Disable inactive devices hider.
+   -radar
+        Enable RadarRSSI.
+
+Work with pcap:
+    -w <file>.pcap
+        Write to pcap file.
+    -l <file>.pcap
+        Load pcap file.
+
+Features:
+    -sc <BSSID> : string
+        Scan a single target carefully.
+
+Radar misc:
+    -dbi-tx <int (or float)>
+        Set TX antenna dBi.
+    -dbi-rx <int (or float)>
+        Set RX antenna dBi.
+    -dbm <int (or float)>
+        Set TX power.
+`
+	fmt.Println(text)
 }
 
 // Check selected channels
@@ -271,21 +272,40 @@ func SetupColors() (color Colors) {
 // Print logo
 func PrintLogo(color Colors, msg string) {
 	ScreenClear()
-	fmt.Println()
-	fmt.Println(color.Green + "         :~7JJJJJ~      ")
-	fmt.Println(color.Green + "       !G&@@@@@@@Y      ")
-	fmt.Println(color.Green + "      ?@@@@B5JY55^      " + color.Blue + "| ")
-	fmt.Println(color.Green + "     ^@@@@J             " + color.Blue + "| " + msg)
-	fmt.Println(color.Green + "     5@@@B              " + color.Blue + "| ")
-	fmt.Println(color.Green + "    .&@@@J              " + color.Blue + "| Welcome to Gapcast!")
-	fmt.Println(color.Green + "    !@@@@~   .....      " + color.Blue + "| Version " + VERSION)
-	fmt.Println(color.Green + "    Y@@@&.  .B&&&7      " + color.Blue + "| ")
-	fmt.Println(color.Green + "    G@@@B   ~@@@@^      " + color.Blue + "| github.com/ANDRVV/gapcast")
-	fmt.Println(color.Green + "   .#@@@5   ?@@@#.      " + color.Blue + "| ")
-	fmt.Println(color.Green + "   :&@@@Y   P@@@P       " + color.Blue + "| ")
-	fmt.Println(color.Green + "   .#@@@#^.:#@@@?       " + color.Blue + "| ")
-	fmt.Println(color.Green + "    !&@@@@##@@@@~.      " + color.Blue + "|            Andrea Vaccaro")
-	fmt.Println(color.Green + "     ^5B&&@&&&#G..      " + color.White + "\n")
+	text := fmt.Sprintf(`%s
+%s         :~7JJJJJ~      
+%s       !G&@@@@@@@Y      
+%s      ?@@@@B5JY55^      %s| 
+%s     ^@@@@J             %s| %s
+%s     5@@@B              %s| 
+%s    .&@@@J              %s| Welcome to Gapcast!
+%s    !@@@@~   .....      %s| Version %s
+%s    Y@@@&.  .B&&&7      %s| 
+%s    G@@@B   ~@@@@^      %s| github.com/ANDRVV/gapcast
+%s   .#@@@5   ?@@@#.      %s| 
+%s   :&@@@Y   P@@@P       %s| 
+%s   .#@@@#^.:#@@@?       %s| 
+%s    !&@@@@##@@@@~.      %s|            Andrea Vaccaro
+%s     ^5B&&@&&&#G..      %s
+
+`,
+	color.Green,
+	color.Green,
+	color.Green,
+	color.Green, color.Blue,
+	color.Green, color.Blue, msg,
+	color.Green, color.Blue,
+	color.Green, color.Blue,
+	color.Green, color.Blue, VERSION,
+	color.Green, color.Blue,
+	color.Green, color.Blue,
+	color.Green, color.Blue,
+	color.Green, color.Blue,
+	color.Green, color.Blue,
+	color.Green, color.Blue,
+	color.Green, color.White)
+
+	fmt.Print(text)
 }
 
 // Print an error msg and exit
