@@ -26,19 +26,23 @@ import (
 )
 
 var (
-	G24channels []int = []int{ // in order by coverage signal
+	// in order by coverage signal
+	G24channels []int = []int{
 		/* Band group 1 */ 1, 6, 11,
 		/* Band group 2 */ 2, 7, 12,
 		/* Band group 3 */ 3, 8, 13,
 		/*              */ 4, 9, 14,
-		/*               */ 5, 10,
+		/*              */ 5, 10,
 	}
-	G5channels []int = []int{ // in descending order by coverage signal (20, 40, 80, 160 MHz)
+
+	// in descending order by coverage signal (20, 40, 80, 160 MHz)
+	G5channels []int = []int{
 		/* 160 MHz coverage */ 50, 114, 163,
 		/*  80 MHz coverage */ 42, 58, 106, 122, 138, 155, 171,
 		/*  40 MHz coverage */ 38, 46, 54, 62, 102, 110, 126, 134, 142, 159, 167, 175,
 		/*  20 MHz coverage */ 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92, 96, 100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144, 149, 153, 157, 161, 165, 169, 173, 177,
 	}
+	
 	G5g24Channels []int = []int(append(G24channels, G5channels...))
 )
 
