@@ -79,11 +79,11 @@ Interfaces & band misc:
    -nm-restart
         Restart Network Manager and reset configs.
 
-Filter misc:")
-   -c <channel> : int")
+Filter misc:"
+   -c <channel> : int"
    -c <channels> : int,int,int...
         Select working channel.
-   -b <BSSID> : string")
+   -b <BSSID> : string"
         Select BSSID filter.
    -p <BSSID PREFIX> : string
         Select BSSID prefix filter.
