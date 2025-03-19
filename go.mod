@@ -1,6 +1,7 @@
 module gapcast
 
 go 1.21.1
+toolchain go1.23.7
 
 require (
 	github.com/eiannone/keyboard v0.0.0-20220611211555-0d226195f203
@@ -14,6 +15,6 @@ require (
 
 require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
-	golang.org/x/net v0.27.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
+	golang.org/x/net v0.36.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
 )
